@@ -1,0 +1,86 @@
+<view class="page">
+  <view class="header">
+    <view class="back-btn" bindtap="goBack">
+      <text class="back-icon">←</text>
+      <text>返回</text>
+    </view>
+    <view class="title">用户详情</view>
+  </view>
+  
+  <view class="content" wx:if="{{!loading}}">
+    <!-- 用户基本信息 -->
+    <view class="user-card">
+      <view class="user-avatar">
+        <image class="avatar" src="{{userInfo.avatarUrl || '/images/avatar.png'}}" mode="aspectFill"/>
+      </view>
+      <view class="user-name">
+        <text class="nickname">{{userInfo.nickName}}</text>
+        <text class="user-id">ID: {{userInfo._openid}}</text>
+      </view>
+      <view class="user-location">
+        <text class="location-icon">📍</text>
+        <text>最近活跃: {{userInfo.lastUpdateTime ? userInfo.lastUpdateTime.toLocaleString() : '未知'}}</text>
+      </view>
+    </view>
+    
+    <!-- 用户标签 -->
+    <view class="section">
+      <view class="section-title">用户标签</view>
+      <view class="tags-container">
+        <view class="tag" wx:for="{{userInfo.tags.length > 0 ? userInfo.tags : userTags}}" wx:key="index">{{item}}</view>
+      </view>
+    </view>
+    
+    <!-- 可信数据 -->
+    <view class="section">
+      <view class="section-title">可信数据</view>
+      <view class="trust-data-container">
+        <view class="trust-data-item">
+          <view class="data-label">信任分</view>
+          <view class="data-value">{{userInfo.trustData.trustScore || userTrustData.trustScore}}</view>
+        </view>
+        <view class="trust-data-item">
+          <view class="data-label">响应率</view>
+          <view class="data-value">{{userInfo.trustData.responseRate || userTrustData.responseRate}}</view>
+        </view>
+        <view class="trust-data-item">
+          <view class="data-label">可约时间</view>
+          <view class="data-value">{{userInfo.trustData.availableTime || userTrustData.availableTime}}</view>
+        </view>
+        <view class="trust-data-item">
+          <view class="data-label">安全评分</view>
+          <view class="data-value">{{userInfo.trustData.safetyRating || userTrustData.safetyRating}}</view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 用户介绍 -->
+    <view class="section">
+      <view class="section-title">用户介绍</view>
+      <view class="user-intro">
+        {{userInfo.introduction || '这个用户很懒，还没有填写介绍~'}}
+      </view>
+    </view>
+    
+    <!-- 用户相册 -->
+    <view class="section" wx:if="{{userInfo.mediaList && userInfo.mediaList.length > 0}}">
+      <view class="section-title">用户相册</view>
+      <view class="media-grid">
+        <view class="media-item" wx:for="{{userInfo.mediaList}}" wx:key="index" bindtap="previewMedia" data-index="{{index}}">
+          <image class="media-image" src="{{item.type === 'image' ? item.fileID : item.thumbUrl || '/images/video-placeholder.png'}}" mode="aspectFill"></image>
+          <view class="media-type-icon" wx:if="{{item.type === 'video'}}">
+            <text class="video-icon">▶</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 联系按钮 -->
+    <view class="contact-btn">联系Ta</view>
+  </view>
+  
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+</view> 

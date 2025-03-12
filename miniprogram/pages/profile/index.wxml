@@ -1,0 +1,80 @@
+<view class="profile-container">
+  <!-- 加载中 -->
+  <view class="loading-container" wx:if="{{isLoading}}">
+    <view class="loading">加载中...</view>
+  </view>
+  
+  <block wx:else>
+    <!-- 用户信息 -->
+    <view class="user-info-card">
+      <view class="user-info-flex">
+        <view class="user-info-left">
+          <view class="user-avatar" bindtap="editAvatar">
+            <image class="avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"/>
+          </view>
+          <view class="user-name" bindtap="editNickname">
+            <text class="nickname">{{userInfo.nickName}}</text>
+            <text class="user-id">ID: {{userInfo.userId}}</text>
+          </view>
+        </view>
+        <view class="user-info-right">
+          <!-- 预留右侧空间，未来可添加其他内容 -->
+        </view>
+      </view>
+    </view>
+    
+    <!-- 个人介绍 -->
+    <view class="introduction-card">
+      <view class="card-header">
+        <text class="card-title">个人介绍</text>
+      </view>
+      
+      <view class="intro-content" bindtap="startEditIntroduction">
+        <text class="intro-text">{{introduction}}</text>
+      </view>
+      
+      <view class="intro-edit" wx:if="{{isEditing}}">
+        <textarea class="intro-textarea" value="{{editIntroduction}}" bindinput="onIntroductionInput" maxlength="200" placeholder="请输入个人介绍"></textarea>
+        <view class="edit-actions">
+          <button class="cancel-btn" bindtap="cancelEditIntroduction">取消</button>
+          <button class="save-btn" bindtap="saveIntroduction">保存</button>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 媒体内容 -->
+    <view class="media-card">
+      <view class="card-header">
+        <text class="card-title">我的相册</text>
+      </view>
+      
+      <!-- 相册内容区域 -->
+      <view class="media-content">
+        <!-- 空相册时显示大的+号 -->
+        <view class="big-upload-item" bindtap="uploadMedia" wx:if="{{mediaList.length === 0}}">
+          <view class="plus-icon">+</view>
+          <text class="upload-text">添加照片或视频</text>
+        </view>
+        
+        <!-- 有照片时的布局 -->
+        <view class="big-media-grid" wx:else>
+          <view class="big-media-item" wx:for="{{mediaList}}" wx:key="index" bindtap="previewMedia" data-index="{{index}}">
+            <image class="media-image" src="{{item.type === 'image' ? item.fileID : item.thumbUrl || '/images/video-placeholder.png'}}" mode="aspectFill"></image>
+            <view class="media-type-icon" wx:if="{{item.type === 'video'}}">
+              <text class="video-icon">▶</text>
+            </view>
+            <view class="media-delete" catchtap="deleteMedia" data-index="{{index}}">
+              <text class="delete-icon">×</text>
+            </view>
+          </view>
+          
+          <!-- 添加按钮放在最后 -->
+          <view class="big-media-item big-upload-item" bindtap="uploadMedia">
+            <view class="plus-icon">+</view>
+            <text class="upload-text">添加照片或视频</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view> 
