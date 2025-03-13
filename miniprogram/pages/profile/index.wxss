@@ -1,0 +1,304 @@
+.profile-container {
+  background: #f8f8f8;
+  min-height: 100vh;
+}
+
+/* 加载中样式 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300rpx;
+}
+
+.loading {
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 用户信息卡片样式 */
+.user-info-card {
+  padding: 30rpx;
+  background: #fff;
+  border-radius: 12rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+}
+
+.user-info-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-info-left {
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar {
+  position: relative;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 20rpx;
+}
+
+.user-avatar:active {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  border: 4rpx solid #fff;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.1);
+}
+
+.user-name {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.user-name:active {
+  opacity: 0.8;
+}
+
+.nickname {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 4rpx;
+}
+
+.user-id {
+  font-size: 24rpx;
+  color: #999;
+  font-weight: normal;
+}
+
+.user-info-right {
+  /* 预留右侧空间样式 */
+}
+
+/* 统计信息样式 */
+.stats-container {
+  display: flex;
+  justify-content: space-around;
+  padding: 30rpx;
+  background: #fff;
+  border-radius: 12rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-number {
+  font-size: 36rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+/* 卡片通用样式 */
+.introduction-card, .media-card {
+  padding: 30rpx;
+  background: #fff;
+  border-radius: 12rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.card-title {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.edit-btn, .upload-btn {
+  font-size: 26rpx;
+  color: #07C160;
+}
+
+/* 介绍内容样式 */
+.intro-content {
+  padding: 10rpx 0;
+  min-height: 80rpx;
+}
+
+.intro-content:active {
+  background-color: #f9f9f9;
+  border-radius: 8rpx;
+}
+
+.intro-text {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 介绍编辑样式 */
+.intro-edit {
+  padding: 10rpx 0;
+}
+
+.intro-textarea {
+  width: 100%;
+  height: 200rpx;
+  background: #f8f8f8;
+  border-radius: 8rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  color: #333;
+  box-sizing: border-box;
+  margin-bottom: 20rpx;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cancel-btn, .save-btn {
+  margin: 0;
+  padding: 0;
+  width: 160rpx;
+  height: 70rpx;
+  line-height: 70rpx;
+  font-size: 28rpx;
+  border-radius: 35rpx;
+}
+
+.cancel-btn {
+  background: #f8f8f8;
+  color: #666;
+  margin-right: 20rpx;
+}
+
+.save-btn {
+  background: #07C160;
+  color: #fff;
+}
+
+/* 媒体内容样式 */
+.media-content {
+  padding: 20rpx 0;
+}
+
+.big-upload-item {
+  width: 100%;
+  height: 320rpx;
+  background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 2rpx dashed #ddd;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  box-shadow: inset 0 0 10rpx rgba(0,0,0,0.03);
+}
+
+.big-upload-item:active {
+  background-color: #f0f0f0;
+}
+
+.big-media-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.big-media-item {
+  width: 100%;
+  height: 360rpx;
+  position: relative;
+  border-radius: 12rpx;
+  overflow: hidden;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
+}
+
+.plus-icon {
+  font-size: 70rpx;
+  color: #ccc;
+  font-weight: 200;
+  margin-bottom: 10rpx;
+}
+
+.upload-text {
+  font-size: 28rpx;
+  color: #aaa;
+  margin-top: 10rpx;
+}
+
+.media-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media-type-icon {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  width: 60rpx;
+  height: 60rpx;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.video-icon {
+  color: #fff;
+  font-size: 30rpx;
+}
+
+.media-delete {
+  position: absolute;
+  top: 20rpx;
+  left: 20rpx;
+  width: 60rpx;
+  height: 60rpx;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.delete-icon {
+  color: #fff;
+  font-size: 36rpx;
+}
+
+/* 可以删除或注释掉不再使用的样式 */
+/* 
+.media-empty, .upload-item-center, .media-grid, .media-item, .upload-item {
+  // 这些样式不再使用
+}
+*/ 

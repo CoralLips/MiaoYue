@@ -1,0 +1,11 @@
+<cover-view class="user-marker" style="left: {{x}}px; top: {{y}}px;" bindtap="onMarkerTap" wx:if="{{show}}">
+  <cover-image 
+    class="avatar {{imageLoaded ? 'loaded' : ''}}"
+    src="{{avatarUrl || defaultAvatar}}"
+    bindload="onImageLoad"
+    binderror="onImageError"
+  />
+  <cover-view class="nickname" wx:if="{{showNickname}}">
+    {{nickName}}
+  </cover-view>
+</cover-view> 

@@ -1,0 +1,116 @@
+<view class="page">
+  <!-- 搜索栏 -->
+  <view class="search-container">
+    <view class="search-box">
+      <input 
+        class="search-input" 
+        placeholder="搜索用户、商家、活动..." 
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        bindconfirm="onSearch"
+      />
+      <view class="search-icon" bindtap="onSearch">
+        <image src="/images/search.png" mode="aspectFit"></image>
+      </view>
+    </view>
+  </view>
+
+  <map
+    id="map"
+    longitude="{{longitude}}"
+    latitude="{{latitude}}"
+    scale="{{mapScale}}"
+    show-location
+    bindregionchange="onRegionChange"
+    markers="{{filteredMarkers}}"
+    bindmarkertap="onMarkerTap"
+    enable-rotate="{{false}}"
+    enable-3D="{{false}}"
+    enable-overlooking="{{false}}"
+    enable-building="{{false}}"
+    style="width: 100%; height: 100vh;"
+  >
+  </map>
+
+  <!-- 地图控制按钮 -->
+  <view class="map-controls">
+    <!-- 频道切换按钮 -->
+    <view class="control-btn channel-btn" bindtap="toggleChannelPopup">
+      <image src="/images/filter.png" mode="aspectFit"></image>
+      <view class="channel-indicator {{currentFilter !== 'all' ? 'active' : ''}}"></view>
+    </view>
+    <!-- 刷新按钮 -->
+    <view class="control-btn refresh-btn" bindtap="refreshLocations">
+      <image src="/images/refresh.png" mode="aspectFit"></image>
+    </view>
+    <!-- 定位按钮 -->
+    <view class="control-btn location-btn" bindtap="moveToCurrentLocation">
+      <image src="/images/location.png" mode="aspectFit"></image>
+    </view>
+  </view>
+
+  <!-- 频道选择弹窗 -->
+  <view class="channel-popup {{showChannelPopup ? 'show' : ''}}" catchtap="closeChannelPopup">
+    <view class="channel-panel" catchtap="stopPropagation">
+      <view class="channel-item {{currentFilter === 'all' ? 'active' : ''}}" 
+            data-type="all" 
+            bindtap="onFilterChange">
+        <text class="channel-text">全部</text>
+        <view class="channel-check" wx:if="{{currentFilter === 'all'}}">✓</view>
+      </view>
+      <view class="channel-item {{currentFilter === 'users' ? 'active' : ''}}" 
+            data-type="users" 
+            bindtap="onFilterChange">
+        <text class="channel-text">用户</text>
+        <view class="channel-check" wx:if="{{currentFilter === 'users'}}">✓</view>
+      </view>
+      <view class="channel-item {{currentFilter === 'business' ? 'active' : ''}}" 
+            data-type="business" 
+            bindtap="onFilterChange">
+        <text class="channel-text">商家</text>
+        <view class="channel-check" wx:if="{{currentFilter === 'business'}}">✓</view>
+      </view>
+      <view class="channel-item {{currentFilter === 'events' ? 'active' : ''}}" 
+            data-type="events" 
+            bindtap="onFilterChange">
+        <text class="channel-text">活动</text>
+        <view class="channel-check" wx:if="{{currentFilter === 'events'}}">✓</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 用户信息弹窗 -->
+  <view class="user-popup" wx:if="{{showUserPopup}}">
+    <view class="user-popup-content">
+      <!-- 关闭按钮 -->
+      <view class="close-btn" bindtap="closeUserPopup">×</view>
+      
+      <!-- 用户基本信息 -->
+      <view class="user-info">
+        <view class="user-avatar">
+          <image src="{{currentUser.avatarUrl || '/images/avatar.png'}}" mode="aspectFill"></image>
+        </view>
+        <view class="user-name">
+          <text class="nickname">{{currentUser.nickName}}</text>
+          <text class="user-id">ID: {{currentUser.openid}}</text>
+        </view>
+      </view>
+      
+      <!-- 用户自我介绍 -->
+      <view class="user-intro">
+        <text>{{currentUser.introduction || '这个用户很懒，还没有填写自我介绍~'}}</text>
+      </view>
+      
+      <!-- 详情按钮 -->
+      <view class="detail-btn" bindtap="viewUserDetail">查看详情</view>
+    </view>
+  </view>
+
+  <!-- 用户信息授权提示 -->
+  <view class="auth-tip" wx:if="{{needUserInfo}}">
+    <view class="auth-content">
+      <text class="auth-text">请先在个人主页设置头像和昵称</text>
+      <button class="auth-btn" bindtap="goToProfile">去设置</button>
+    </view>
+  </view>
+</view> 

@@ -1,0 +1,49 @@
+/* pages/user/detail/index.wxss */
+.page {
+  width: 100vw;
+  min-height: 100vh;
+  background-color: #f8f8f8;
+}
+
+/* 头部样式 */
+.header {
+  position: relative;
+  height: 100rpx;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+
+.back-btn {
+  position: absolute;
+  left: 30rpx;
+  display: flex;
+  align-items: center;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.back-icon {
+  font-size: 36rpx;
+  margin-right: 10rpx;
+}
+
+.title {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+/* 加载中样式 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300rpx;
+}
+
+.loading {
+  color: #999;
+  font-size: 28rpx;
+}

@@ -1,0 +1,20 @@
+<view class="profile-container">
+  <!-- 加载中 -->
+  <view class="loading-container" wx:if="{{isLoading}}">
+    <view class="loading">加载中...</view>
+  </view>
+  
+  <!-- 用户资料 -->
+  <user-profile 
+    wx:else
+    userInfo="{{userInfo}}" 
+    editable="{{true}}"
+    bind:editAvatar="editAvatar"
+    bind:editNickname="editNickname"
+    bind:editIntroduction="startEditIntroduction"
+    bind:editContact="handleEditContact"
+    bind:previewMedia="previewMedia"
+    bind:uploadMedia="uploadMedia"
+    bind:deleteMedia="deleteMedia"
+  />
+</view> 
