@@ -96,35 +96,9 @@
         </view>
       </view>
       
-      <!-- 用户标签 -->
-      <view class="user-tags">
-        <view class="section-title">用户标签</view>
-        <view class="tags-container">
-          <view class="tag" wx:for="{{currentUser.tags.length > 0 ? currentUser.tags : userTags}}" wx:key="index">{{item}}</view>
-        </view>
-      </view>
-      
-      <!-- 可信数据 -->
-      <view class="user-trust-data">
-        <view class="section-title">可信数据</view>
-        <view class="trust-data-container">
-          <view class="trust-data-item">
-            <view class="data-label">信任分</view>
-            <view class="data-value">{{currentUser.trustData.trustScore || userTrustData.trustScore}}</view>
-          </view>
-          <view class="trust-data-item">
-            <view class="data-label">响应率</view>
-            <view class="data-value">{{currentUser.trustData.responseRate || userTrustData.responseRate}}</view>
-          </view>
-          <view class="trust-data-item">
-            <view class="data-label">可约时间</view>
-            <view class="data-value">{{currentUser.trustData.availableTime || userTrustData.availableTime}}</view>
-          </view>
-          <view class="trust-data-item">
-            <view class="data-label">安全评分</view>
-            <view class="data-value">{{currentUser.trustData.safetyRating || userTrustData.safetyRating}}</view>
-          </view>
-        </view>
+      <!-- 用户自我介绍 -->
+      <view class="user-intro">
+        <text>{{currentUser.introduction || '这个用户很懒，还没有填写自我介绍~'}}</text>
       </view>
       
       <!-- 详情按钮 -->

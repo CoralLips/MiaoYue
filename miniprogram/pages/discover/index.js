@@ -387,7 +387,8 @@ Page({
         },
         userData: {
           ...user,
-          openid: user._openid
+          openid: user._openid,
+          introduction: '' // 添加用户自我介绍字段
         }
       });
     }
@@ -545,14 +546,7 @@ Page({
               avatarUrl: userInfo.avatarUrl,
               visible: true,
               lastUpdateTime: db.serverDate(),
-              // 添加用户标签和可信数据字段（初始值）
-              tags: [],
-              trustData: {
-                trustScore: 0,
-                responseRate: '0%',
-                availableTime: '未知',
-                safetyRating: 0
-              }
+              introduction: '' // 添加用户自我介绍字段
             }
           }).then(() => {
             console.log('位置信息创建成功');
@@ -599,13 +593,7 @@ Page({
               avatarUrl: '/images/avatar.png',
               visible: true,
               lastUpdateTime: db.serverDate(),
-              tags: [],
-              trustData: {
-                trustScore: 0,
-                responseRate: '0%',
-                availableTime: '未知',
-                safetyRating: 0
-              }
+              introduction: '' // 添加用户自我介绍字段
             }
           }).then(() => {
             console.log('位置信息创建成功(默认信息)');
@@ -752,13 +740,7 @@ Page({
             openid: item._openid,
             nickName: item.nickName || '匿名用户',
             avatarUrl: avatarUrl,
-            tags: item.tags || [],
-            trustData: item.trustData || {
-              trustScore: 0,
-              responseRate: '0%',
-              availableTime: '未知',
-              safetyRating: 0
-            }
+            introduction: item.introduction || '' // 添加用户自我介绍字段
           }
         };
       }).filter(marker => marker !== null);

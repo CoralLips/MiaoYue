@@ -1,13 +1,6 @@
 Page({
   data: {
     userInfo: null,
-    userTags: ['喜欢跑步', '会摄影', '会按摩'], // 示例标签
-    userTrustData: {
-      trustScore: 85,
-      responseRate: '90%',
-      availableTime: '周末',
-      safetyRating: 4.5
-    },
     loading: true
   },
 
@@ -30,42 +23,30 @@ Page({
     const db = wx.cloud.database();
     
     // 显示加载中
-    wx.showLoading({
-      title: '加载中...'
+    this.setData({
+      loading: true
     });
     
-    // 同时查询用户位置信息和用户详细资料
-    Promise.all([
-      // 查询用户位置信息
-      db.collection('user_locations').where({
-        _openid: openid
-      }).get(),
-      
-      // 查询用户详细资料
-      db.collection('users').where({
-        _openid: openid
-      }).get()
-    ]).then(([locationRes, userRes]) => {
-      // 合并用户信息
-      let userInfo = {};
-      
-      if (locationRes.data.length > 0) {
-        // 有位置信息
-        userInfo = {...locationRes.data[0]};
-      }
-      
-      if (userRes.data.length > 0) {
-        // 有用户详细资料，合并信息
-        userInfo = {...userInfo, ...userRes.data[0]};
-      }
-      
-      if (Object.keys(userInfo).length > 0) {
+    // 查询用户资料
+    db.collection('users').where({
+      _openid: openid
+    }).get().then(res => {
+      if (res.data.length > 0) {
+        // 用户存在，加载资料
+        const userInfo = res.data[0];
         this.setData({
-          userInfo: userInfo,
+          userInfo: {
+            avatarUrl: userInfo.avatarUrl || '/images/avatar.png',
+            nickName: userInfo.nickName || '匿名用户',
+            _openid: openid,
+            introduction: userInfo.introduction || '这个用户很懒，还没有填写介绍~',
+            mediaList: userInfo.mediaList || [],
+            wechat: userInfo.wechat || '',
+            phone: userInfo.phone || ''
+          },
           loading: false
         });
       } else {
-        // 用户不存在
         wx.showToast({
           title: '用户不存在',
           icon: 'error'
@@ -74,26 +55,26 @@ Page({
           wx.navigateBack();
         }, 1500);
       }
-      
-      wx.hideLoading();
     }).catch(err => {
-      console.error('获取用户信息失败', err);
-      wx.hideLoading();
+      console.error('获取用户资料失败', err);
+      this.setData({
+        loading: false
+      });
       wx.showToast({
-        title: '获取用户信息失败',
-        icon: 'error'
+        title: '获取用户资料失败',
+        icon: 'none'
       });
     });
   },
-  
-  // 返回地图页面
+
+  // 返回上一页
   goBack() {
     wx.navigateBack();
   },
-  
+
   // 预览媒体
   previewMedia(e) {
-    const index = e.currentTarget.dataset.index;
+    const index = e.detail.index;
     const media = this.data.userInfo.mediaList[index];
     
     if (media.type === 'image') {

@@ -48,5 +48,8 @@
   },
   "requiredPrivateInfos": [
     "getLocation"
-  ]
+  ],
+  "usingComponents": {
+    "user-profile": "./components/user-profile/index"
+  }
 }

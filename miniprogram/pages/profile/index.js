@@ -3,23 +3,23 @@ Page({
     userInfo: {
       avatarUrl: '/images/avatar.png',
       nickName: '点击设置昵称',
-      userId: ''
+      _openid: '',
+      introduction: '这个用户很懒，还没有填写介绍~',
+      wechat: '',
+      phone: '',
+      mediaList: []
     },
-    introduction: '这个用户很懒，还没有填写介绍~',
     isEditing: false,
     editIntroduction: '',
-    mediaList: [], // 用户上传的照片和视频列表
-    isLoggedIn: false, // 是否已登录
-    isLoading: true // 是否正在加载
+    isLoggedIn: false,
+    isLoading: true
   },
 
   onLoad() {
-    // 检查用户是否已登录（是否有openid）
     const app = getApp();
     if (app.globalData.openid) {
       this.loadUserProfile(app.globalData.openid);
     } else {
-      // 尝试获取openid
       app.getOpenid((openid) => {
         if (openid) {
           this.loadUserProfile(openid);
@@ -33,37 +33,53 @@ Page({
   },
 
   onShow() {
-    // 每次显示页面时刷新数据
     const app = getApp();
     if (app.globalData.openid && this.data.isLoggedIn) {
-      this.loadUserProfile(app.globalData.openid);
+      // 检查是否需要刷新数据
+      const lastUpdateTime = wx.getStorageSync('userProfileLastUpdate');
+      const now = Date.now();
+      if (!lastUpdateTime || now - lastUpdateTime > 5 * 60 * 1000) { // 5分钟更新一次
+        this.loadUserProfile(app.globalData.openid);
+      }
     }
   },
 
   // 加载用户资料
   loadUserProfile(openid) {
+    // 先尝试从缓存加载
+    const cachedUserInfo = wx.getStorageSync('userProfile');
+    if (cachedUserInfo && cachedUserInfo._openid === openid) {
+      this.setData({
+        userInfo: cachedUserInfo,
+        isLoggedIn: true,
+        isLoading: false
+      });
+    }
+
     const db = wx.cloud.database();
     
-    // 显示加载中
-    this.setData({
-      isLoading: true
-    });
-    
-    // 查询用户资料
+    // 即使有缓存也在后台更新数据
     db.collection('users').where({
       _openid: openid
     }).get().then(res => {
       if (res.data.length > 0) {
-        // 用户存在，加载资料
         const userProfile = res.data[0];
-        this.setData({
-          userInfo: {
-            avatarUrl: userProfile.avatarUrl || '/images/avatar.png',
-            nickName: userProfile.nickName || '用户' + openid.substring(0, 4),
-            userId: openid
-          },
+        const userInfo = {
+          avatarUrl: userProfile.avatarUrl || '/images/avatar.png',
+          nickName: userProfile.nickName || '用户' + openid.substring(0, 4),
+          _openid: openid,
           introduction: userProfile.introduction || '这个用户很懒，还没有填写介绍~',
           mediaList: userProfile.mediaList || [],
+          wechat: userProfile.wechat || '',
+          phone: userProfile.phone || ''
+        };
+
+        // 更新缓存
+        wx.setStorageSync('userProfile', userInfo);
+        wx.setStorageSync('userProfileLastUpdate', Date.now());
+
+        this.setData({
+          userInfo,
           isLoggedIn: true,
           isLoading: false
         });
@@ -73,13 +89,16 @@ Page({
       }
     }).catch(err => {
       console.error('获取用户资料失败', err);
-      this.setData({
-        isLoading: false
-      });
-      wx.showToast({
-        title: '获取用户资料失败',
-        icon: 'none'
-      });
+      // 如果有缓存数据，继续使用
+      if (!cachedUserInfo) {
+        this.setData({
+          isLoading: false
+        });
+        wx.showToast({
+          title: '获取用户资料失败',
+          icon: 'none'
+        });
+      }
     });
   },
 
@@ -94,6 +113,8 @@ Page({
         avatarUrl: '/images/avatar.png',
         introduction: '这个用户很懒，还没有填写介绍~',
         mediaList: [],
+        wechat: '',
+        phone: '',
         createTime: db.serverDate()
       }
     }).then(res => {
@@ -102,7 +123,11 @@ Page({
         userInfo: {
           avatarUrl: '/images/avatar.png',
           nickName: defaultNickName,
-          userId: openid
+          _openid: openid,
+          introduction: '这个用户很懒，还没有填写介绍~',
+          mediaList: [],
+          wechat: '',
+          phone: ''
         },
         isLoggedIn: true,
         isLoading: false
@@ -130,7 +155,7 @@ Page({
         });
         
         // 上传图片到云存储
-        const cloudPath = `avatars/${this.data.userInfo.userId}_${new Date().getTime()}.jpg`;
+        const cloudPath = `avatars/${this.data.userInfo._openid}_${new Date().getTime()}.jpg`;
         wx.cloud.uploadFile({
           cloudPath,
           filePath: tempFilePath,
@@ -169,44 +194,49 @@ Page({
 
   // 开始编辑介绍
   startEditIntroduction() {
-    this.setData({
-      isEditing: true,
-      editIntroduction: this.data.introduction
+    wx.showModal({
+      title: '编辑介绍',
+      content: '请输入您的个人介绍',
+      editable: true,
+      placeholderText: '这个用户很懒，还没有填写介绍~',
+      value: this.data.userInfo.introduction || '',
+      success: res => {
+        if (res.confirm && res.content) {
+          this.updateUserField('introduction', res.content);
+        }
+      }
     });
   },
 
-  // 保存介绍
-  saveIntroduction() {
-    this.updateUserField('introduction', this.data.editIntroduction);
-    this.setData({
-      isEditing: false
+  // 处理联系方式编辑
+  handleEditContact(e) {
+    const { type } = e.detail;
+    const title = type === 'wechat' ? '修改微信号' : '修改手机号';
+    const content = type === 'wechat' ? '请输入微信号' : '请输入手机号';
+    const currentValue = this.data.userInfo[type] || '';
+
+    wx.showModal({
+      title,
+      content,
+      editable: true,
+      placeholderText: currentValue,
+      success: (res) => {
+        if (res.confirm) {
+          // 更新联系方式
+          this.updateUserField(type, res.content);
+        }
+      }
     });
   },
 
-  // 取消编辑介绍
-  cancelEditIntroduction() {
-    this.setData({
-      isEditing: false
-    });
-  },
-
-  // 介绍输入变化
-  onIntroductionInput(e) {
-    this.setData({
-      editIntroduction: e.detail.value
-    });
-  },
-
-  // 上传媒体（照片或视频）
+  // 上传媒体
   uploadMedia() {
     wx.showActionSheet({
-      itemList: ['上传照片', '上传视频'],
+      itemList: ['上传图片', '上传视频'],
       success: (res) => {
         if (res.tapIndex === 0) {
-          // 上传照片
           this.chooseAndUploadImage();
-        } else if (res.tapIndex === 1) {
-          // 上传视频
+        } else {
           this.chooseAndUploadVideo();
         }
       }
@@ -229,7 +259,7 @@ Page({
         
         // 上传所有选中的图片
         const uploadTasks = tempFilePaths.map((filePath, index) => {
-          const cloudPath = `media/${this.data.userInfo.userId}/image_${new Date().getTime()}_${index}.jpg`;
+          const cloudPath = `media/${this.data.userInfo._openid}/image_${new Date().getTime()}_${index}.jpg`;
           return wx.cloud.uploadFile({
             cloudPath,
             filePath
@@ -238,16 +268,15 @@ Page({
         
         // 等待所有上传任务完成
         Promise.all(uploadTasks).then(results => {
-          const newMediaList = results.map(res => {
-            return {
-              fileID: res.fileID,
-              type: 'image',
-              createTime: new Date().getTime()
-            };
-          });
+          const newMediaList = results.map(res => ({
+            fileID: res.fileID,
+            type: 'image',
+            createTime: new Date().getTime()
+          }));
           
           // 更新用户媒体列表
-          this.updateMediaList(newMediaList);
+          const mediaList = this.data.userInfo.mediaList.concat(newMediaList);
+          this.updateMediaList(mediaList);
         }).catch(err => {
           console.error('上传图片失败', err);
           wx.hideLoading();
@@ -267,29 +296,38 @@ Page({
       maxDuration: 60,
       camera: 'back',
       success: (res) => {
-        const tempFilePath = res.tempFilePath;
-        
         // 显示加载中
         wx.showLoading({
           title: '上传中...'
         });
         
-        // 上传视频到云存储
-        const cloudPath = `media/${this.data.userInfo.userId}/video_${new Date().getTime()}.mp4`;
+        // 上传视频文件
+        const cloudPath = `media/${this.data.userInfo._openid}/video_${new Date().getTime()}.mp4`;
         wx.cloud.uploadFile({
           cloudPath,
-          filePath: tempFilePath,
-          success: (res) => {
-            const newMedia = {
-              fileID: res.fileID,
-              type: 'video',
-              createTime: new Date().getTime(),
-              thumbUrl: '', // 视频缩略图，可以通过云函数生成
-              duration: Math.floor(res.duration) // 视频时长
-            };
-            
-            // 更新用户媒体列表
-            this.updateMediaList([newMedia]);
+          filePath: res.tempFilePath,
+          success: (uploadRes) => {
+            // 生成视频封面
+            const thumbPath = `media/${this.data.userInfo._openid}/thumb_${new Date().getTime()}.jpg`;
+            wx.cloud.uploadFile({
+              cloudPath: thumbPath,
+              filePath: res.thumbTempFilePath,
+              success: (thumbRes) => {
+                const newMedia = {
+                  fileID: uploadRes.fileID,
+                  thumbUrl: thumbRes.fileID,
+                  type: 'video',
+                  createTime: new Date().getTime()
+                };
+                
+                // 更新用户媒体列表
+                const mediaList = this.data.userInfo.mediaList.concat([newMedia]);
+                this.updateMediaList(mediaList);
+              },
+              fail: (err) => {
+                console.error('上传视频封面失败', err);
+              }
+            });
           },
           fail: (err) => {
             console.error('上传视频失败', err);
@@ -304,50 +342,66 @@ Page({
     });
   },
 
-  // 更新媒体列表
-  updateMediaList(newMediaItems) {
-    const db = wx.cloud.database();
-    const app = getApp();
+  // 删除媒体
+  deleteMedia(e) {
+    const { index } = e.detail;
+    const media = this.data.userInfo.mediaList[index];
     
-    // 获取当前媒体列表
-    db.collection('users').where({
-      _openid: app.globalData.openid
-    }).get().then(res => {
-      if (res.data.length > 0) {
-        const currentMediaList = res.data[0].mediaList || [];
-        const updatedMediaList = [...currentMediaList, ...newMediaItems];
-        
-        // 更新数据库
-        db.collection('users').where({
-          _openid: app.globalData.openid
-        }).update({
-          data: {
-            mediaList: updatedMediaList
-          }
-        }).then(() => {
-          // 更新本地数据
-          this.setData({
-            mediaList: updatedMediaList
-          });
+    wx.showModal({
+      title: '确认删除',
+      content: '确定要删除这个' + (media.type === 'image' ? '图片' : '视频') + '吗？',
+      success: (res) => {
+        if (res.confirm) {
+          // 从云存储中删除文件
+          const deletePromises = [wx.cloud.deleteFile({
+            fileList: [media.fileID]
+          })];
           
-          wx.hideLoading();
-          wx.showToast({
-            title: '上传成功',
-            icon: 'success'
+          // 如果是视频，还需要删除封面
+          if (media.type === 'video' && media.thumbUrl) {
+            deletePromises.push(wx.cloud.deleteFile({
+              fileList: [media.thumbUrl]
+            }));
+          }
+          
+          Promise.all(deletePromises).then(() => {
+            // 更新媒体列表
+            const mediaList = this.data.userInfo.mediaList.slice();
+            mediaList.splice(index, 1);
+            this.updateMediaList(mediaList);
+          }).catch(err => {
+            console.error('删除文件失败', err);
+            wx.showToast({
+              title: '删除失败',
+              icon: 'none'
+            });
           });
-        }).catch(err => {
-          console.error('更新媒体列表失败', err);
-          wx.hideLoading();
-          wx.showToast({
-            title: '更新媒体列表失败',
-            icon: 'none'
-          });
-        });
+        }
       }
-    }).catch(err => {
-      console.error('获取媒体列表失败', err);
-      wx.hideLoading();
     });
+  },
+
+  // 预览媒体
+  previewMedia(e) {
+    const { index } = e.detail;
+    const media = this.data.userInfo.mediaList[index];
+    
+    if (media.type === 'image') {
+      // 预览图片
+      const imageUrls = this.data.userInfo.mediaList
+        .filter(item => item.type === 'image')
+        .map(item => item.fileID);
+      
+      wx.previewImage({
+        current: media.fileID,
+        urls: imageUrls
+      });
+    } else if (media.type === 'video') {
+      // 播放视频
+      wx.navigateTo({
+        url: `/pages/video-player/index?fileID=${encodeURIComponent(media.fileID)}`
+      });
+    }
   },
 
   // 更新用户字段
@@ -355,12 +409,10 @@ Page({
     const db = wx.cloud.database();
     const app = getApp();
     
-    // 显示加载中
     wx.showLoading({
       title: '更新中...'
     });
     
-    // 更新数据库
     const updateData = {};
     updateData[field] = value;
     
@@ -369,20 +421,14 @@ Page({
     }).update({
       data: updateData
     }).then(() => {
-      // 更新本地数据
-      if (field === 'avatarUrl') {
-        this.setData({
-          'userInfo.avatarUrl': value
-        });
-      } else if (field === 'nickName') {
-        this.setData({
-          'userInfo.nickName': value
-        });
-      } else if (field === 'introduction') {
-        this.setData({
-          introduction: value
-        });
-      }
+      // 更新本地数据和缓存
+      const userInfo = {...this.data.userInfo};
+      userInfo[field] = value;
+      this.setData({ userInfo });
+      
+      // 更新缓存
+      wx.setStorageSync('userProfile', userInfo);
+      wx.setStorageSync('userProfileLastUpdate', Date.now());
       
       wx.hideLoading();
       wx.showToast({
@@ -399,84 +445,38 @@ Page({
     });
   },
 
-  // 预览媒体
-  previewMedia(e) {
-    const index = e.currentTarget.dataset.index;
-    const media = this.data.mediaList[index];
+  // 更新媒体列表
+  updateMediaList(mediaList) {
+    const db = wx.cloud.database();
+    const app = getApp();
     
-    if (media.type === 'image') {
-      // 预览图片
-      const imageUrls = this.data.mediaList
-        .filter(item => item.type === 'image')
-        .map(item => item.fileID);
-      
-      wx.previewImage({
-        current: media.fileID,
-        urls: imageUrls
-      });
-    } else if (media.type === 'video') {
-      // 播放视频
-      wx.navigateTo({
-        url: `/pages/video-player/index?fileID=${encodeURIComponent(media.fileID)}`
-      });
-    }
-  },
-
-  // 删除媒体
-  deleteMedia(e) {
-    const index = e.currentTarget.dataset.index;
-    const media = this.data.mediaList[index];
-    
-    wx.showModal({
-      title: '确认删除',
-      content: '确定要删除这个' + (media.type === 'image' ? '图片' : '视频') + '吗？',
-      success: (res) => {
-        if (res.confirm) {
-          // 从云存储中删除文件
-          wx.cloud.deleteFile({
-            fileList: [media.fileID],
-            success: () => {
-              // 从数据库中删除记录
-              const newMediaList = [...this.data.mediaList];
-              newMediaList.splice(index, 1);
-              
-              this.setData({
-                mediaList: newMediaList
-              });
-              
-              // 更新数据库
-              const db = wx.cloud.database();
-              const app = getApp();
-              
-              db.collection('users').where({
-                _openid: app.globalData.openid
-              }).update({
-                data: {
-                  mediaList: newMediaList
-                }
-              }).then(() => {
-                wx.showToast({
-                  title: '删除成功',
-                  icon: 'success'
-                });
-              }).catch(err => {
-                console.error('更新媒体列表失败', err);
-                wx.showToast({
-                  title: '删除失败',
-                  icon: 'none'
-                });
-              });
-            },
-            fail: (err) => {
-              console.error('删除文件失败', err);
-              wx.showToast({
-                title: '删除失败',
-                icon: 'none'
-              });
-            }
-          });
-        }
+    db.collection('users').where({
+      _openid: app.globalData.openid
+    }).update({
+      data: {
+        mediaList: mediaList
       }
+    }).then(() => {
+      // 更新本地数据
+      const userInfo = Object.assign({}, this.data.userInfo, {
+        mediaList: mediaList
+      });
+      this.setData({
+        userInfo: userInfo
+      });
+      
+      wx.hideLoading();
+      wx.showToast({
+        title: '更新成功',
+        icon: 'success'
+      });
+    }).catch(err => {
+      console.error('更新媒体列表失败', err);
+      wx.hideLoading();
+      wx.showToast({
+        title: '更新失败',
+        icon: 'none'
+      });
     });
   }
 }); 
