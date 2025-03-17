@@ -1,0 +1,24 @@
+---
+description: Performance optimization guidelines and best practices for ensuring smooth user experience and efficient resource usage
+globs: 
+alwaysApply: true
+---
+# Performance Guidelines
+
+optimization-rules:
+- lazy-load-heavy-resources
+- implement-caching-strategies
+- minimize-rerenders
+- optimize-cloud-functions
+
+monitoring:
+- track-critical-paths
+- measure-page-load-times
+- monitor-memory-usage
+- track-api-performance
+
+cloud-optimization:
+- minimize-function-cold-starts
+- optimize-database-queries
+- implement-proper-indexing
+- efficient-data-transfer

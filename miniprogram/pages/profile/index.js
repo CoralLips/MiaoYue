@@ -15,40 +15,98 @@ Page({
     isLoading: true
   },
 
-  onLoad() {
+  async onLoad() {
+    console.log('[Profile] onLoad 开始');
     const app = getApp();
-    if (app.globalData.openid) {
-      this.loadUserProfile(app.globalData.openid);
-    } else {
-      app.getOpenid((openid) => {
-        if (openid) {
-          this.loadUserProfile(openid);
-        } else {
-          this.setData({
-            isLoading: false
-          });
+    console.log('[Profile] globalData:', app.globalData);
+
+    // 添加超时保护
+    setTimeout(() => {
+      if (this.data.isLoading) {
+        console.log('[Profile] 加载超时');
+        this.setData({
+          isLoading: false,
+          userInfo: {
+            ...this.data.userInfo,
+            nickName: '加载超时,请重试'
+          }
+        });
+      }
+    }, 10000);
+
+    try {
+      let openid;
+      if (app.globalData.openid) {
+        console.log('[Profile] 已有openid:', app.globalData.openid);
+        openid = app.globalData.openid;
+      } else {
+        console.log('[Profile] 尝试获取openid');
+        openid = await app.getOpenid();
+        console.log('[Profile] getOpenid结果:', openid);
+      }
+
+      if (openid) {
+        await this.loadUserProfile(openid);
+      } else {
+        console.log('[Profile] 获取openid失败');
+        this.setData({
+          isLoading: false,
+          userInfo: {
+            ...this.data.userInfo,
+            nickName: '请先登录'
+          }
+        });
+        wx.showToast({
+          title: '登录失败,请重试',
+          icon: 'none'
+        });
+      }
+    } catch (error) {
+      console.error('[Profile] onLoad错误:', error);
+      this.setData({
+        isLoading: false,
+        userInfo: {
+          ...this.data.userInfo,
+          nickName: '加载失败,请重试'
         }
+      });
+      wx.showToast({
+        title: '加载失败,请重试',
+        icon: 'none'
       });
     }
   },
 
   onShow() {
+    console.log('Profile page onShow');
     const app = getApp();
     if (app.globalData.openid && this.data.isLoggedIn) {
       // 检查是否需要刷新数据
       const lastUpdateTime = wx.getStorageSync('userProfileLastUpdate');
       const now = Date.now();
       if (!lastUpdateTime || now - lastUpdateTime > 5 * 60 * 1000) { // 5分钟更新一次
+        console.log('Refreshing user profile');
         this.loadUserProfile(app.globalData.openid);
       }
+    }
+
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({
+        selected: 2
+      });
     }
   },
 
   // 加载用户资料
-  loadUserProfile(openid) {
+  async loadUserProfile(openid) {
+    console.log('[Profile] 开始加载用户资料:', openid);
+    
     // 先尝试从缓存加载
     const cachedUserInfo = wx.getStorageSync('userProfile');
+    console.log('[Profile] 缓存数据:', cachedUserInfo);
+    
     if (cachedUserInfo && cachedUserInfo._openid === openid) {
+      console.log('[Profile] 使用缓存数据');
       this.setData({
         userInfo: cachedUserInfo,
         isLoggedIn: true,
@@ -57,57 +115,46 @@ Page({
     }
 
     const db = wx.cloud.database();
+    console.log('[Profile] 开始请求云数据库');
     
     // 即使有缓存也在后台更新数据
-    db.collection('users').where({
+    const res = await db.collection('users').where({
       _openid: openid
-    }).get().then(res => {
-      if (res.data.length > 0) {
-        const userProfile = res.data[0];
-        const userInfo = {
-          avatarUrl: userProfile.avatarUrl || '/images/avatar.png',
-          nickName: userProfile.nickName || '用户' + openid.substring(0, 4),
-          _openid: openid,
-          introduction: userProfile.introduction || '这个用户很懒，还没有填写介绍~',
-          mediaList: userProfile.mediaList || [],
-          wechat: userProfile.wechat || '',
-          phone: userProfile.phone || ''
-        };
+    }).get();
+    console.log('[Profile] 数据库返回:', res);
+    if (res.data.length > 0) {
+      const userProfile = res.data[0];
+      const userInfo = {
+        avatarUrl: userProfile.avatarUrl || '/images/avatar.png',
+        nickName: userProfile.nickName || '用户' + openid.substring(0, 4),
+        _openid: openid,
+        introduction: userProfile.introduction || '这个用户很懒，还没有填写介绍~',
+        mediaList: userProfile.mediaList || [],
+        wechat: userProfile.wechat || '',
+        phone: userProfile.phone || ''
+      };
 
-        // 更新缓存
-        wx.setStorageSync('userProfile', userInfo);
-        wx.setStorageSync('userProfileLastUpdate', Date.now());
+      // 更新缓存
+      wx.setStorageSync('userProfile', userInfo);
+      wx.setStorageSync('userProfileLastUpdate', Date.now());
 
-        this.setData({
-          userInfo,
-          isLoggedIn: true,
-          isLoading: false
-        });
-      } else {
-        // 用户不存在，创建新用户
-        this.createNewUser(openid);
-      }
-    }).catch(err => {
-      console.error('获取用户资料失败', err);
-      // 如果有缓存数据，继续使用
-      if (!cachedUserInfo) {
-        this.setData({
-          isLoading: false
-        });
-        wx.showToast({
-          title: '获取用户资料失败',
-          icon: 'none'
-        });
-      }
-    });
+      this.setData({
+        userInfo,
+        isLoggedIn: true,
+        isLoading: false
+      });
+    } else {
+      console.log('[Profile] 用户不存在,准备创建');
+      await this.createNewUser(openid);
+    }
   },
 
   // 创建新用户
-  createNewUser(openid) {
+  async createNewUser(openid) {
     const db = wx.cloud.database();
     const defaultNickName = '用户' + openid.substring(0, 4);
     
-    db.collection('users').add({
+    const res = await db.collection('users').add({
       data: {
         nickName: defaultNickName,
         avatarUrl: '/images/avatar.png',
@@ -117,26 +164,20 @@ Page({
         phone: '',
         createTime: db.serverDate()
       }
-    }).then(res => {
-      console.log('用户创建成功', res);
-      this.setData({
-        userInfo: {
-          avatarUrl: '/images/avatar.png',
-          nickName: defaultNickName,
-          _openid: openid,
-          introduction: '这个用户很懒，还没有填写介绍~',
-          mediaList: [],
-          wechat: '',
-          phone: ''
-        },
-        isLoggedIn: true,
-        isLoading: false
-      });
-    }).catch(err => {
-      console.error('用户创建失败', err);
-      this.setData({
-        isLoading: false
-      });
+    });
+    console.log('用户创建成功', res);
+    this.setData({
+      userInfo: {
+        avatarUrl: '/images/avatar.png',
+        nickName: defaultNickName,
+        _openid: openid,
+        introduction: '这个用户很懒，还没有填写介绍~',
+        mediaList: [],
+        wechat: '',
+        phone: ''
+      },
+      isLoggedIn: true,
+      isLoading: false
     });
   },
 
@@ -193,18 +234,43 @@ Page({
   },
 
   // 开始编辑介绍
-  startEditIntroduction() {
-    wx.showModal({
-      title: '编辑介绍',
-      content: '请输入您的个人介绍',
-      editable: true,
-      placeholderText: '这个用户很懒，还没有填写介绍~',
-      value: this.data.userInfo.introduction || '',
-      success: res => {
-        if (res.confirm && res.content) {
-          this.updateUserField('introduction', res.content);
-        }
+  startEditIntroduction(e) {
+    const { content } = e.detail;
+    const db = wx.cloud.database();
+    const app = getApp();
+    
+    wx.showLoading({
+      title: '保存中...'
+    });
+    
+    db.collection('users').where({
+      _openid: app.globalData.openid
+    }).update({
+      data: {
+        introduction: content
       }
+    }).then(() => {
+      // 更新本地数据
+      const userInfo = {...this.data.userInfo};
+      userInfo.introduction = content;
+      this.setData({ userInfo });
+      
+      // 更新缓存
+      wx.setStorageSync('userProfile', userInfo);
+      wx.setStorageSync('userProfileLastUpdate', Date.now());
+      
+      wx.hideLoading();
+      wx.showToast({
+        title: '已保存',
+        icon: 'success'
+      });
+    }).catch(err => {
+      console.error('更新介绍失败', err);
+      wx.hideLoading();
+      wx.showToast({
+        title: '保存失败',
+        icon: 'none'
+      });
     });
   },
 

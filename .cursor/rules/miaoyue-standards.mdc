@@ -1,0 +1,52 @@
+---
+description: Technical standards and development conventions for maintaining code quality and consistency across the project
+globs: 
+alwaysApply: true
+---
+# Technical Standards
+
+code-standards:
+- follow-wechat-miniprogram-best-practices
+- use-typescript-like-type-hints
+- implement-error-boundaries
+- maintain-consistent-naming
+
+development-patterns:
+- use-shared-components-for-common-ui
+- implement-central-state-management
+- follow-data-flow-pattern
+- implement-global-error-handling
+
+data-management:
+- cache-strategy: local-storage + memory-cache
+- state-flow: view -> action -> state -> view
+- error-handling: global + component-level
+
+cloud-function-standards:
+- consistent-error-response-format
+- input-validation
+- proper-logging
+- performance-optimization
+- security-best-practices
+
+development-principles:
+  # Minimal Implementation
+  - Only implement explicitly requested features
+  - Do not add anticipatory code or configurations
+  - Do not consider extensibility unless specifically requested
+
+  # Code Simplicity
+  - Keep code structure simple and direct
+  - Do not add unused variables and functions
+  - Do not introduce dependencies that aren't immediately needed
+
+  # Progressive Development
+  - Add features and configurations as needed
+  - Do not pre-consider potential future extensions
+  - Optimize only when requirements are clear
+  - Remove all unused code and comments before committing
+
+  # Development Focus
+  - Focus on current sprint/iteration requirements
+  - Avoid over-engineering and premature optimization
+  - Keep solutions straightforward and maintainable

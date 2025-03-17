@@ -3,7 +3,6 @@
 page {
   /* padding-top: 54rpx; */
   padding-bottom: 60rpx;
-  background-color: #fff;
 }
 
 .container {

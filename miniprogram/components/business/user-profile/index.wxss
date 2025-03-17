@@ -103,24 +103,44 @@
 
 /* 介绍内容样式 */
 .intro-content {
-  padding: 10rpx 0;
-  min-height: 80rpx;
-}
-
-.intro-content:active {
-  background-color: #f9f9f9;
+  padding: 20rpx;
+  min-height: 120rpx;
   border-radius: 8rpx;
 }
 
-.intro-text {
+.intro-content.editing {
+  background: #f9f9f9;
+}
+
+.intro-textarea {
+  width: 100%;
+  min-height: 80rpx;
   font-size: 28rpx;
-  color: #666;
+  color: #333;
   line-height: 1.6;
+}
+
+.intro-hint {
+  position: absolute;
+  right: 20rpx;
+  bottom: 20rpx;
+  font-size: 24rpx;
+  color: #07C160;
+  opacity: 0.8;
 }
 
 /* 联系方式样式 */
 .contact-content {
   padding: 10rpx 0;
+}
+
+.contact-privacy-hint {
+  font-size: 22rpx;
+  color: #07C160;
+  background: rgba(7, 193, 96, 0.08);
+  padding: 4rpx 12rpx;
+  border-radius: 16rpx;
+  margin-left: 12rpx;
 }
 
 .contact-item {
@@ -147,6 +167,32 @@
 .contact-value {
   font-size: 28rpx;
   color: #333;
+}
+
+.contact-privacy-icon {
+  font-size: 24rpx;
+  color: #07C160;
+}
+
+.contact-privacy-tip {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background: rgba(7, 193, 96, 0.05);
+  border-radius: 8rpx;
+  display: flex;
+  align-items: flex-start;
+  gap: 10rpx;
+}
+
+.tip-icon {
+  font-size: 28rpx;
+}
+
+.tip-text {
+  font-size: 24rpx;
+  color: #666;
+  flex: 1;
+  line-height: 1.6;
 }
 
 /* 媒体内容样式 */

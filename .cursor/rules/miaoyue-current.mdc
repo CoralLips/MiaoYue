@@ -1,0 +1,24 @@
+---
+description: Current phase focus areas and active issues requiring immediate attention, updated regularly based on project progress
+globs: 
+alwaysApply: true
+---
+# Current Phase
+
+focus-areas:
+- optimize-profile-performance
+- implement-media-handling
+- improve-data-caching
+- refactor-shared-components
+
+active-issues:
+- slow-loading-discover-page
+- memory-leaks-media-preview
+- inconsistent-error-handling
+- component-duplication
+
+priorities:
+- user-experience-optimization
+- code-reusability-improvement
+- performance-optimization
+- technical-debt-reduction

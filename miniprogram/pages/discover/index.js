@@ -29,7 +29,17 @@ Page({
     needUserInfo: false, // 是否需要获取用户信息
     debounceTimer: null,
     currentRegion: null,
+    isLoading: false,
+    // 缓存相关数据
+    regionCache: {
+      data: null,
+      timestamp: 0,
+      region: null
+    }
   },
+
+  // 缓存时间常量
+  CACHE_DURATION: 30000, // 30秒缓存
 
   onLoad() {
     // 初始化时获取当前位置
@@ -301,44 +311,80 @@ Page({
       clearTimeout(this.data.debounceTimer);
     }
 
-    if (e.type === 'end') {
-      this.setData({
-        debounceTimer: setTimeout(() => {
-          const mapCtx = wx.createMapContext('map');
-          mapCtx.getRegion({
-            success: (res) => {
-              this.loadUsersInRegion(res.southwest, res.northeast);
-            }
-          });
-        }, 200)
-      });
+    if (e.type === 'end' && !this.data.isLoading) {
+      const debounceTimer = setTimeout(() => {
+        const mapCtx = wx.createMapContext('map');
+        mapCtx.getRegion({
+          success: (res) => {
+            this.loadUsersInRegion(res.southwest, res.northeast);
+          }
+        });
+      }, 300); // 增加防抖时间到300ms
+
+      this.setData({ debounceTimer });
     }
   },
 
-  // 加载区域内的用户
+  // 检查是否在相同区域
+  isInSameRegion(region1, region2) {
+    if (!region1 || !region2) return false;
+    
+    const tolerance = 0.01; // 允许的误差范围
+    return Math.abs(region1.southwest.latitude - region2.southwest.latitude) < tolerance &&
+           Math.abs(region1.southwest.longitude - region2.southwest.longitude) < tolerance &&
+           Math.abs(region1.northeast.latitude - region2.northeast.latitude) < tolerance &&
+           Math.abs(region1.northeast.longitude - region2.northeast.longitude) < tolerance;
+  },
+
+  // 加载区域内的用户（优化版）
   loadUsersInRegion(southwest, northeast) {
+    if (this.data.isLoading) {
+      console.log('正在加载中，跳过本次请求');
+      return;
+    }
+
+    const now = Date.now();
+    
+    // 检查是否可以使用缓存
+    if (this.data.regionCache.data && 
+        now - this.data.regionCache.timestamp < this.CACHE_DURATION &&
+        this.isInSameRegion(this.data.regionCache.region, {southwest, northeast})) {
+      console.log('使用缓存数据');
+      this.processAndUpdateMarkers(this.data.regionCache.data);
+      return;
+    }
+
+    console.log('开始加载区域内用户', {southwest, northeast});
+    this.setData({ isLoading: true });
+    
     const db = wx.cloud.database();
     const _ = db.command;
-    const app = getApp();
     
-    console.log('开始加载区域内用户', {southwest, northeast});
+    // 添加时间限制，只获取一小时内活跃的用户
+    const oneHourAgo = new Date();
+    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
     
     const query = {
       visible: true,
+      lastUpdateTime: _.gt(oneHourAgo),
       'location.latitude': _.gte(southwest.latitude).and(_.lte(northeast.latitude)),
       'location.longitude': _.gte(southwest.longitude).and(_.lte(northeast.longitude))
     };
 
     db.collection('user_locations')
       .where(query)
+      .limit(50) // 限制返回数量
       .get()
       .then(res => {
         console.log('获取到用户数据:', res.data);
-        if (res.data.length === 0) {
-          console.log('该区域没有用户数据');
-          this.setData({ markers: [] });
-          return;
-        }
+        
+        // 更新缓存
+        this.setData({
+          'regionCache.data': res.data,
+          'regionCache.timestamp': now,
+          'regionCache.region': {southwest, northeast}
+        });
+        
         this.processAndUpdateMarkers(res.data);
       })
       .catch(err => {
@@ -347,60 +393,84 @@ Page({
           title: '获取用户数据失败',
           icon: 'none'
         });
+      })
+      .finally(() => {
+        this.setData({ isLoading: false });
       });
   },
 
-  // 处理并更新标记
-  async processAndUpdateMarkers(users) {
+  // 处理并更新标记（优化版）
+  processAndUpdateMarkers(users) {
     const app = getApp();
-    const markers = [];
+    const currentMarkers = this.data.markers || [];
+    const newMarkers = [];
+    const markersMap = new Map();
     
     console.log('开始处理用户数据，总数:', users.length);
     
-    for (const user of users) {
+    // 创建现有标记的映射
+    currentMarkers.forEach(marker => {
+      if (marker.userData) {
+        markersMap.set(marker.userData.openid, marker);
+      }
+    });
+    
+    users.forEach(user => {
       // 跳过当前用户
       if (user._openid === app.globalData.openid) {
         console.log('跳过当前用户');
-        continue;
+        return;
       }
 
-      // 使用默认头像或用户头像
-      const avatarUrl = user.avatarUrl || '/images/default-avatar.png';
-      
-      markers.push({
-        id: markers.length + 1,
-        latitude: user.location.latitude,
-        longitude: user.location.longitude,
-        iconPath: avatarUrl,
-        width: 36,
-        height: 36,
-        anchor: {x: 0.5, y: 0.5},
-        label: {
-          content: '',
-          color: '#00000000',
-          bgColor: '#00000000',
-          padding: 0,
-          borderWidth: 0,
-          borderRadius: 18,
-          textAlign: 'center',
-          fontSize: 12
-        },
-        userData: {
-          ...user,
-          openid: user._openid,
-          introduction: '' // 添加用户自我介绍字段
-        }
-      });
-    }
-
-    console.log('处理完成，标记数量:', markers.length);
-    
-    this.setData({ 
-      markers,
-      filteredMarkers: markers 
-    }, () => {
-      console.log('标记已更新到地图');
+      // 检查是否已存在该用户的标记
+      const existingMarker = markersMap.get(user._openid);
+      if (existingMarker &&
+          existingMarker.latitude === user.location.latitude &&
+          existingMarker.longitude === user.location.longitude) {
+        newMarkers.push(existingMarker);
+      } else {
+        // 创建新标记
+        newMarkers.push({
+          id: newMarkers.length + 1,
+          latitude: user.location.latitude,
+          longitude: user.location.longitude,
+          iconPath: user.avatarUrl || '/images/default-avatar.png',
+          width: 36,
+          height: 36,
+          anchor: {x: 0.5, y: 0.5},
+          label: {
+            content: '',
+            color: '#00000000',
+            bgColor: '#00000000',
+            padding: 0,
+            borderWidth: 0,
+            borderRadius: 18,
+            textAlign: 'center',
+            fontSize: 12
+          },
+          userData: {
+            openid: user._openid,
+            nickName: user.nickName || '匿名用户',
+            avatarUrl: user.avatarUrl || '/images/default-avatar.png',
+            introduction: user.introduction || ''
+          }
+        });
+      }
     });
+
+    console.log('处理完成，新标记数量:', newMarkers.length);
+    
+    // 只有当标记真正发生变化时才更新
+    if (JSON.stringify(currentMarkers) !== JSON.stringify(newMarkers)) {
+      this.setData({ 
+        markers: newMarkers,
+        filteredMarkers: newMarkers 
+      }, () => {
+        console.log('标记已更新到地图');
+      });
+    } else {
+      console.log('标记未发生变化，跳过更新');
+    }
   },
 
   // 标记点点击处理
@@ -466,7 +536,7 @@ Page({
   },
 
   // 获取位置信息
-  getLocation() {
+  getLocation(shouldMove = true) {
     console.log('开始获取位置');
     wx.getLocation({
       type: 'gcj02',
@@ -483,19 +553,30 @@ Page({
           
           // 获取当前地图上下文
           const mapCtx = wx.createMapContext('map');
-          // 移动到当前位置
-          mapCtx.moveToLocation({
-            success: () => {
-              console.log('移动到当前位置成功');
-              // 获取当前可视区域并加载用户
-              mapCtx.getRegion({
-                success: (region) => {
-                  console.log('获取地图区域成功:', region);
-                  this.loadUsersInRegion(region.southwest, region.northeast);
-                }
-              });
-            }
-          });
+          
+          // 只有在需要时才移动到当前位置
+          if (shouldMove) {
+            mapCtx.moveToLocation({
+              success: () => {
+                console.log('移动到当前位置成功');
+                // 获取当前可视区域并加载用户
+                mapCtx.getRegion({
+                  success: (region) => {
+                    console.log('获取地图区域成功:', region);
+                    this.loadUsersInRegion(region.southwest, region.northeast);
+                  }
+                });
+              }
+            });
+          } else {
+            // 直接获取当前可视区域并加载用户
+            mapCtx.getRegion({
+              success: (region) => {
+                console.log('获取地图区域成功:', region);
+                this.loadUsersInRegion(region.southwest, region.northeast);
+              }
+            });
+          }
         });
       },
       fail: (err) => {
@@ -773,7 +854,14 @@ Page({
   viewUserDetail() {
     if (this.data.currentUser && this.data.currentUser.openid) {
       wx.navigateTo({
-        url: `/pages/user/detail/index?openid=${this.data.currentUser.openid}`
+        url: `/packages/user/pages/detail/index?openid=${this.data.currentUser.openid}`,
+        fail: (err) => {
+          console.error('跳转用户详情页失败', err);
+          wx.showToast({
+            title: '页面跳转失败',
+            icon: 'none'
+          });
+        }
       });
       // 关闭弹窗
       this.closeUserPopup();
@@ -790,8 +878,8 @@ Page({
   refreshLocations() {
     wx.showLoading({ title: '刷新中...' });
     
-    // 1. 更新自己的位置
-    this.updateMyLocation();
+    // 1. 更新自己的位置，但不移动地图视角
+    this.getLocation(false);
     
     // 2. 重新加载当前区域的用户
     const mapCtx = wx.createMapContext('map');

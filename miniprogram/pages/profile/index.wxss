@@ -1,6 +1,7 @@
 .profile-container {
-  background: #f8f8f8;
+  background: var(--color-bg-page);
   min-height: 100vh;
+  padding: var(--spacing-sm);
 }
 
 /* 加载中样式 */
@@ -12,17 +13,20 @@
 }
 
 .loading {
-  color: #999;
-  font-size: 28rpx;
+  color: var(--color-text-disabled);
+  font-size: var(--font-size-base);
 }
 
 /* 用户信息卡片样式 */
 .user-info-card {
-  padding: 30rpx;
-  background: #fff;
-  border-radius: 12rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-base);
+  padding: var(--spacing-base);
+  margin-bottom: var(--spacing-base);
+  box-shadow: var(--shadow-base);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .user-info-flex {
@@ -40,9 +44,9 @@
   position: relative;
   width: 120rpx;
   height: 120rpx;
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   overflow: hidden;
-  margin-right: 20rpx;
+  margin-right: var(--spacing-small);
 }
 
 .user-avatar:active {
@@ -53,9 +57,9 @@
 .avatar {
   width: 120rpx;
   height: 120rpx;
-  border-radius: 50%;
-  border: 4rpx solid #fff;
-  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.1);
+  border-radius: var(--radius-circle);
+  border: 4rpx solid var(--color-bg-card);
+  box-shadow: var(--shadow-base);
 }
 
 .user-name {
@@ -69,15 +73,15 @@
 }
 
 .nickname {
-  font-size: 32rpx;
-  color: #333;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
   font-weight: 500;
   margin-bottom: 4rpx;
 }
 
 .user-id {
-  font-size: 24rpx;
-  color: #999;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-disabled);
   font-weight: normal;
 }
 
@@ -89,11 +93,11 @@
 .stats-container {
   display: flex;
   justify-content: space-around;
-  padding: 30rpx;
-  background: #fff;
-  border-radius: 12rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+  padding: var(--spacing-base);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-base);
+  margin-bottom: var(--spacing-small);
+  box-shadow: var(--shadow-base);
 }
 
 .stat-item {
@@ -103,44 +107,85 @@
 }
 
 .stat-number {
-  font-size: 36rpx;
-  color: #333;
+  font-size: var(--font-size-large);
+  color: var(--color-text-primary);
   font-weight: bold;
 }
 
 .stat-label {
-  font-size: 24rpx;
-  color: #999;
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
   margin-top: 8rpx;
 }
 
-/* 卡片通用样式 */
-.introduction-card, .media-card {
-  padding: 30rpx;
-  background: #fff;
-  border-radius: 12rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+/* 个人介绍卡片 */
+.introduction-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-base);
+  padding: var(--spacing-base);
+  margin-bottom: var(--spacing-base);
+  box-shadow: var(--shadow-base);
 }
 
+/* 联系方式卡片 */
+.contact-section {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-base);
+  padding: var(--spacing-base);
+  margin-bottom: var(--spacing-base);
+  box-shadow: var(--shadow-base);
+}
+
+/* 相册卡片 */
+.media-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-base);
+  padding: var(--spacing-base);
+  margin-bottom: var(--spacing-base);
+  box-shadow: var(--shadow-base);
+}
+
+/* 分割线样式优化 */
+.divider {
+  height: 1rpx;
+  background: var(--color-border);
+  margin: var(--spacing-small) 0;
+}
+
+/* 卡片标题样式 */
+.section-title {
+  font-size: var(--font-size-medium);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-small);
+  font-weight: 500;
+}
+
+/* 卡片内容样式 */
+.section-content {
+  color: var(--color-text-regular);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+}
+
+/* 卡片通用样式 */
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20rpx;
-  padding-bottom: 20rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  margin-bottom: var(--spacing-small);
+  padding-bottom: var(--spacing-small);
+  border-bottom: 1rpx solid var(--color-border);
 }
 
 .card-title {
-  font-size: 30rpx;
-  color: #333;
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
   font-weight: 500;
 }
 
 .edit-btn, .upload-btn {
-  font-size: 26rpx;
-  color: #07C160;
+  font-size: var(--font-size-small);
+  color: var(--brand-primary);
 }
 
 /* 介绍内容样式 */
@@ -151,12 +196,12 @@
 
 .intro-content:active {
   background-color: #f9f9f9;
-  border-radius: 8rpx;
+  border-radius: var(--radius-small);
 }
 
 .intro-text {
-  font-size: 28rpx;
-  color: #666;
+  font-size: var(--font-size-base);
+  color: var(--color-text-regular);
   line-height: 1.6;
 }
 
@@ -168,13 +213,13 @@
 .intro-textarea {
   width: 100%;
   height: 200rpx;
-  background: #f8f8f8;
-  border-radius: 8rpx;
-  padding: 20rpx;
-  font-size: 28rpx;
-  color: #333;
+  background: var(--color-bg-page);
+  border-radius: var(--radius-small);
+  padding: var(--spacing-small);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
   box-sizing: border-box;
-  margin-bottom: 20rpx;
+  margin-bottom: var(--spacing-small);
 }
 
 .edit-actions {
@@ -188,24 +233,24 @@
   width: 160rpx;
   height: 70rpx;
   line-height: 70rpx;
-  font-size: 28rpx;
+  font-size: var(--font-size-base);
   border-radius: 35rpx;
 }
 
 .cancel-btn {
-  background: #f8f8f8;
-  color: #666;
-  margin-right: 20rpx;
+  background: var(--color-bg-page);
+  color: var(--color-text-regular);
+  margin-right: var(--spacing-small);
 }
 
 .save-btn {
-  background: #07C160;
-  color: #fff;
+  background: var(--brand-primary);
+  color: var(--color-bg-card);
 }
 
 /* 媒体内容样式 */
 .media-content {
-  padding: 20rpx 0;
+  padding: var(--spacing-small) 0;
 }
 
 .big-upload-item {
@@ -217,8 +262,8 @@
   justify-content: center;
   align-items: center;
   border: 2rpx dashed #ddd;
-  border-radius: 16rpx;
-  margin-bottom: 20rpx;
+  border-radius: var(--radius-large);
+  margin-bottom: var(--spacing-small);
   box-shadow: inset 0 0 10rpx rgba(0,0,0,0.03);
 }
 
@@ -235,10 +280,10 @@
   width: 100%;
   height: 360rpx;
   position: relative;
-  border-radius: 12rpx;
+  border-radius: var(--radius-base);
   overflow: hidden;
-  margin-bottom: 30rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
+  margin-bottom: var(--spacing-base);
+  box-shadow: var(--shadow-card);
 }
 
 .plus-icon {
@@ -249,7 +294,7 @@
 }
 
 .upload-text {
-  font-size: 28rpx;
+  font-size: var(--font-size-base);
   color: #aaa;
   margin-top: 10rpx;
 }
@@ -262,38 +307,38 @@
 
 .media-type-icon {
   position: absolute;
-  top: 20rpx;
-  right: 20rpx;
+  top: var(--spacing-small);
+  right: var(--spacing-small);
   width: 60rpx;
   height: 60rpx;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 50%;
+  background: var(--color-bg-mask);
+  border-radius: var(--radius-circle);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .video-icon {
-  color: #fff;
-  font-size: 30rpx;
+  color: var(--color-bg-card);
+  font-size: var(--font-size-base);
 }
 
 .media-delete {
   position: absolute;
-  top: 20rpx;
-  left: 20rpx;
+  top: var(--spacing-small);
+  left: var(--spacing-small);
   width: 60rpx;
   height: 60rpx;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 50%;
+  background: var(--color-bg-mask);
+  border-radius: var(--radius-circle);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .delete-icon {
-  color: #fff;
-  font-size: 36rpx;
+  color: var(--color-bg-card);
+  font-size: var(--font-size-large);
 }
 
 /* 可以删除或注释掉不再使用的样式 */

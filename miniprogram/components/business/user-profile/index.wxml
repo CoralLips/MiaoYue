@@ -21,10 +21,17 @@
   <view class="introduction-card">
     <view class="card-header">
       <text class="card-title">个人介绍</text>
-      <text class="edit-btn" wx:if="{{editable}}" bindtap="editIntroduction">编辑</text>
     </view>
-    <view class="intro-content" bindtap="{{editable ? 'editIntroduction' : ''}}">
-      <text class="intro-text">{{userInfo.introduction || '这个用户很懒，还没有填写介绍~'}}</text>
+    <view class="intro-content {{isEditing ? 'editing' : ''}}">
+      <textarea class="intro-textarea" 
+        value="{{userInfo.introduction}}" 
+        placeholder="点击这里编辑个人介绍" 
+        maxlength="200"
+        auto-height
+        bindfocus="onIntroFocus"
+        bindblur="onIntroBlur"
+        bindinput="onIntroInput"
+      />
     </view>
   </view>
 
@@ -32,6 +39,7 @@
   <view class="contact-card">
     <view class="card-header">
       <text class="card-title">联系方式</text>
+      <text class="contact-privacy-hint">仅匹配后可见</text>
     </view>
     <view class="contact-content">
       <view class="contact-item" bindtap="editContact" data-type="wechat">

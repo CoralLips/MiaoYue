@@ -1,0 +1,36 @@
+/**
+ * 全局变量定义
+ * 命名规范：xs/sm/base/lg/xl
+ * 数值规律：8的倍数为主
+ */
+page {
+  /* 品牌色 */
+  --brand-primary: #07C160;
+  
+  /* 文字颜色 */
+  --color-text-primary: #333333;
+  --color-text-secondary: #666666;
+  --color-text-disabled: #999999;
+  
+  /* 背景色 */
+  --color-bg-page: #f0f0f0;
+  --color-bg-card: #ffffff;
+  --color-bg-mask: rgba(0, 0, 0, 0.5);
+  
+  /* 边框和阴影 */
+  --color-border: #f0f0f0;
+  --shadow-base: 0 2rpx 12rpx rgba(0, 0, 0, 0.1);
+  
+  /* 字体大小 */
+  --font-size-sm: 28rpx;    /* 次要文字 */
+  --font-size-base: 32rpx;  /* 主要文字 */
+  --font-size-lg: 36rpx;    /* 标题文字 */
+  
+  /* 间距 */
+  --spacing-base: 24rpx;    /* 基础间距 */
+  --spacing-sm: 16rpx;      /* 小间距，用于内部元素 */
+  
+  /* 圆角 */
+  --radius-base: 12rpx;
+  --radius-circle: 50%;
+} 

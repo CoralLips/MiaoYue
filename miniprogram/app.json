@@ -2,16 +2,29 @@
   "pages": [
     "pages/index/index",
     "pages/discover/index",
-    "pages/profile/index",
-    "pages/user/detail/index",
-    "pages/video-player/index"
+    "pages/profile/index"
+  ],
+  "subpackages": [
+    {
+      "root": "packages/user",
+      "pages": [
+        "pages/detail/index"
+      ]
+    },
+    {
+      "root": "packages/media",
+      "pages": [
+        "pages/video-player/index"
+      ]
+    }
   ],
   "window": {
-    "backgroundColor": "#F6F6F6",
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#F6F6F6",
-    "navigationBarTitleText": "小程序",
-    "navigationBarTextStyle": "black"
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "秒约",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f8f8f8",
+    "enablePullDownRefresh": true
   },
   "sitemapLocation": "sitemap.json",
   "style": "v2",
@@ -29,13 +42,13 @@
       },
       {
         "pagePath": "pages/discover/index",
-        "text": "发现", 
+        "text": "发现",
         "iconPath": "images/discover.png",
         "selectedIconPath": "images/discover-active.png"
       },
       {
         "pagePath": "pages/profile/index",
-        "text": "我",
+        "text": "我的",
         "iconPath": "images/usercenter.png",
         "selectedIconPath": "images/usercenter-active.png"
       }
@@ -43,13 +56,23 @@
   },
   "permission": {
     "scope.userLocation": {
-      "desc": "需要获取您的位置信息用于在地图上显示"
+      "desc": "需要获取您的位置信息用于查找附近的好友和活动"
     }
   },
   "requiredPrivateInfos": [
     "getLocation"
   ],
   "usingComponents": {
-    "user-profile": "./components/user-profile/index"
+    "circle-image": "/components/base/circleImage/index"
+  },
+  "preloadRule": {
+    "pages/discover/index": {
+      "network": "all",
+      "packages": ["packages/user"]
+    },
+    "pages/index/index": {
+      "network": "all",
+      "packages": ["packages/media"]
+    }
   }
 }

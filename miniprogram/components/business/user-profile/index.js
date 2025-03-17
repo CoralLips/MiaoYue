@@ -10,6 +10,19 @@ Component({
     }
   },
 
+  data: {
+    introContent: '',
+    isEditing: false
+  },
+
+  observers: {
+    'userInfo.introduction': function(introduction) {
+      this.setData({
+        introContent: introduction || ''
+      });
+    }
+  },
+
   methods: {
     // 编辑头像
     editAvatar() {
@@ -23,10 +36,32 @@ Component({
       this.triggerEvent('editNickname');
     },
 
-    // 编辑介绍
-    editIntroduction() {
+    // 处理个人介绍获得焦点
+    onIntroFocus() {
       if (!this.properties.editable) return;
-      this.triggerEvent('editIntroduction');
+      this.setData({
+        isEditing: true
+      });
+    },
+
+    // 处理个人介绍输入
+    onIntroInput(e) {
+      this.setData({
+        introContent: e.detail.value
+      });
+    },
+
+    // 处理个人介绍失去焦点
+    onIntroBlur() {
+      if (!this.properties.editable) return;
+      this.setData({
+        isEditing: false
+      });
+      if (this.data.introContent !== this.properties.userInfo.introduction) {
+        this.triggerEvent('editIntroduction', {
+          content: this.data.introContent
+        });
+      }
     },
 
     // 编辑联系方式

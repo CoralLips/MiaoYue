@@ -1,4 +1,25 @@
-/**app.wxss**/
+/**
+ * 全局样式
+ */
+@import './styles/variables.wxss';
+
+/* 重置样式 */
+button {
+  background: initial;
+  outline: 0;
+  border: none;
+}
+
+/* 页面布局 */
+page {
+  background: var(--color-bg-page);
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
 .container {
   display: flex;
   flex-direction: column;
@@ -6,22 +27,41 @@
   box-sizing: border-box;
 } 
 
-button {
-  background: initial;
+/* 文字样式 */
+.text-primary { color: var(--brand-primary); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-disabled { color: var(--color-text-disabled); }
+
+.text-sm { font-size: var(--font-size-sm); }
+.text-base { font-size: var(--font-size-base); }
+.text-lg { font-size: var(--font-size-lg); }
+
+/* 间距工具类 */
+.mt-base { margin-top: var(--spacing-base); }
+.mb-base { margin-bottom: var(--spacing-base); }
+.my-base { 
+  margin-top: var(--spacing-base);
+  margin-bottom: var(--spacing-base);
 }
 
-button:focus{
-  outline: 0;
-}
-
-button::after{
-  border: none;
-}
-
-
-page {
-  background: #f6f6f6;
+/* 布局工具类 */
+.flex-center {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 文字工具类 */
+.text-description { color: var(--color-text-secondary); }
+
+.text-small { font-size: var(--font-size-small); }
+
+/* 卡片样式 */
+.card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-base);
+  padding: var(--spacing-base);
+  margin-bottom: var(--spacing-base);
+  box-shadow: var(--shadow-base);
+  border: 1rpx solid rgba(0, 0, 0, 0.05);  /* 添加浅色边框增加层次感 */
 }

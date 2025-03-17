@@ -1,97 +1,85 @@
 // app.js
 App({
-  onLaunch: function () {
+  globalData: {
+    openid: null,
+    systemInfo: null,
+  },
+  
+  onLaunch: async function() {
+    try {
+      await this.initSystemInfo();
+      await this.initCloudEnv();
+      await this.initOpenid();
+    } catch (error) {
+      console.error('[应用初始化失败]', error);
+      wx.showToast({
+        title: `初始化失败：${error.message}`,
+        icon: 'error',
+        duration: 3000
+      });
+    }
+  },
+
+  // 初始化系统信息
+  async initSystemInfo() {
+    try {
+      const systemInfo = await wx.getSystemInfo();
+      this.globalData.systemInfo = systemInfo;
+      console.log('[系统信息]', systemInfo);
+    } catch (error) {
+      console.error('[系统信息] 获取失败', error);
+      throw new Error('获取系统信息失败');
+    }
+  },
+
+  // 初始化云环境
+  async initCloudEnv() {
     if (!wx.cloud) {
-      console.error("请使用 2.2.3 或以上的基础库以使用云能力");
-    } else {
-      wx.cloud.init({
+      throw new Error('请使用 2.2.3 或以上的基础库以使用云能力');
+    }
+    
+    try {
+      await wx.cloud.init({
         env: wx.cloud.DYNAMIC_CURRENT_ENV,
         traceUser: true,
       });
+    } catch (error) {
+      console.error('[云环境] 初始化失败', error);
+      throw new Error('云环境初始化失败');
     }
+  },
+  
+  // 初始化获取用户openid（仅在应用启动时调用）
+  async initOpenid() {
+    const openid = await this._fetchOpenid();
+    this.globalData.openid = openid;
+    return openid;
+  },
 
-    this.globalData = {
-      openid: null
-    };
+  // 获取用户openid（供其他页面调用）
+  async getOpenid() {
+    // 如果已经有openid，直接返回
+    if (this.globalData.openid) {
+      return this.globalData.openid;
+    }
     
-    // 登录获取openid
-    this.getOpenid();
+    // 如果没有，重新获取
+    const openid = await this._fetchOpenid();
+    this.globalData.openid = openid;
+    return openid;
   },
-  
-  // 获取用户openid
-  getOpenid: function(callback) {
-    const that = this;
-    wx.cloud.callFunction({
-      name: 'login',
-      success: res => {
-        console.log('[云函数] [login] 调用成功', res);
-        that.globalData.openid = res.result.openid;
-        if (callback && typeof callback === 'function') {
-          callback(res.result.openid);
-        }
-      },
-      fail: err => {
-        console.error('[云函数] [login] 调用失败', err);
-        if (callback && typeof callback === 'function') {
-          callback(null);
-        }
-      }
-    });
-  },
-  
-  // 更新用户位置
-  updateUserLocation: function() {
-    wx.getLocation({
-      type: 'gcj02',
-      success: (res) => {
-        const { latitude, longitude } = res;
-        
-        // 上传到云数据库
-        const db = wx.cloud.database();
-        db.collection('user_locations').where({
-          _openid: this.globalData.openid
-        }).count().then(countRes => {
-          if (countRes.total === 0) {
-            // 新增位置记录
-            db.collection('user_locations').add({
-              data: {
-                location: {
-                  latitude,
-                  longitude
-                },
-                nickName: '用户' + this.globalData.openid.substring(0, 4),
-                avatarUrl: '',
-                visible: true,
-                lastUpdateTime: db.serverDate()
-              }
-            }).then(() => {
-              console.log('位置信息创建成功');
-            }).catch(err => {
-              console.error('位置信息创建失败', err);
-            });
-          } else {
-            // 更新位置记录
-            db.collection('user_locations').where({
-              _openid: this.globalData.openid
-            }).update({
-              data: {
-                location: {
-                  latitude,
-                  longitude
-                },
-                lastUpdateTime: db.serverDate()
-              }
-            }).then(() => {
-              console.log('位置信息更新成功');
-            }).catch(err => {
-              console.error('位置信息更新失败', err);
-            });
-          }
-        });
-      },
-      fail: (err) => {
-        console.error('获取位置失败', err);
-      }
-    });
+
+  // 私有方法：实际获取openid的逻辑
+  async _fetchOpenid() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'login'
+      });
+      console.log('[云函数] [login] 调用成功', res);
+      return res.result.openid;
+    } catch (error) {
+      console.error('[云函数] [login] 调用失败', error);
+      throw new Error('获取openid失败');
+    }
   }
 });

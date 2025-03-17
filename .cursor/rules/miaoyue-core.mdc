@@ -1,0 +1,27 @@
+---
+description: Core architecture and fundamental patterns for MiaoYue Mini Program, defining the basic project structure and development approach
+globs: 
+alwaysApply: true
+---
+# Core Architecture
+
+project: miaoyue-miniprogram
+type: wechat-mini-program
+
+fundamental-patterns:
+- component-based-structure
+- cloud-based-backend
+- wechat-ecosystem-integration
+
+file-organization:
+- components/: reusable-ui-components
+- pages/: page-level-components
+- services/: business-logic-and-api
+- utils/: helper-functions
+- types/: type-definitions
+
+cloud-functions:
+- separate-function-per-feature
+- proper-error-handling
+- efficient-database-queries
+- secure-access-control
