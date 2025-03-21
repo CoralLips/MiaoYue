@@ -24,7 +24,7 @@
     "navigationBarTitleText": "秒约",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f8f8f8",
-    "enablePullDownRefresh": true
+    "enablePullDownRefresh": false
   },
   "sitemapLocation": "sitemap.json",
   "style": "v2",
@@ -63,7 +63,7 @@
     "getLocation"
   ],
   "usingComponents": {
-    "circle-image": "/components/base/circleImage/index"
+    "circle-image": "/components/circle-image/index"
   },
   "preloadRule": {
     "pages/discover/index": {

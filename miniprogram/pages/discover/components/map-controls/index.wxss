@@ -1,0 +1,46 @@
+.map-controls {
+  position: fixed;
+  right: 24rpx;
+  bottom: 200rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  z-index: 90;
+}
+
+.control-btn {
+  width: 80rpx;
+  height: 80rpx;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+  transition: all 0.3s;
+}
+
+.control-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.control-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.channel-indicator {
+  position: absolute;
+  top: 10rpx;
+  right: 10rpx;
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #ff0000;
+  display: none;
+}
+
+.channel-indicator.active {
+  display: block;
+} 

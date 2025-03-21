@@ -1,0 +1,25 @@
+<view class="user-popup {{visible ? 'show' : ''}}" bindtap="onClose">
+  <view class="user-popup-content" catchtap="stopPropagation">
+    <!-- 关闭按钮 -->
+    <view class="close-btn" bindtap="onClose">×</view>
+    
+    <!-- 用户基本信息 -->
+    <view class="user-info">
+      <view class="user-avatar">
+        <image src="{{user.avatarUrl || '/images/avatar.png'}}" mode="aspectFill"></image>
+      </view>
+      <view class="user-name">
+        <text class="nickname">{{user.nickName}}</text>
+        <text class="user-id">ID: {{user.openid}}</text>
+      </view>
+    </view>
+    
+    <!-- 用户自我介绍 -->
+    <view class="user-intro">
+      <text>{{user.introduction || '这个用户很懒，还没有填写自我介绍~'}}</text>
+    </view>
+    
+    <!-- 详情按钮 -->
+    <view class="detail-btn" bindtap="onViewDetail">查看详情</view>
+  </view>
+</view> 

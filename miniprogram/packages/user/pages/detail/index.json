@@ -1,5 +1,5 @@
 {
   "usingComponents": {
-    "user-profile": "/components/business/user-profile/index"
+    "user-profile": "/components/user-profile/index"
   }
 }

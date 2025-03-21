@@ -1,5 +1,8 @@
 {
   "usingComponents": {
-    "user-marker": "/components/business/userMarker/index"
+    "search-bar": "./components/search-bar/index",
+    "map-controls": "./components/map-controls/index",
+    "user-popup": "./components/user-popup/index",
+    "channel-selector": "./components/channel-selector/index"
   }
 }

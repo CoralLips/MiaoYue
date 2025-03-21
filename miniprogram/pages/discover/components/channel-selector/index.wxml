@@ -1,0 +1,14 @@
+<view class="channel-popup {{visible ? 'show' : ''}}" bindtap="onClose">
+  <view class="channel-panel" catchtap="stopPropagation">
+    <view 
+      wx:for="{{filters}}" 
+      wx:key="type"
+      class="channel-item {{currentFilter === item.type ? 'active' : ''}}" 
+      data-type="{{item.type}}" 
+      bindtap="onFilterSelect"
+    >
+      <text class="channel-text">{{item.text}}</text>
+      <view class="channel-check" wx:if="{{currentFilter === item.type}}">✓</view>
+    </view>
+  </view>
+</view> 

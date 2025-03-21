@@ -1,0 +1,46 @@
+.channel-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: none;
+}
+
+.channel-popup.show {
+  display: block;
+}
+
+.channel-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 20rpx 20rpx 0 0;
+  padding: 30rpx;
+}
+
+.channel-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 0;
+  border-bottom: 1rpx solid #eee;
+}
+
+.channel-item:last-child {
+  border-bottom: none;
+}
+
+.channel-text {
+  font-size: 32rpx;
+  color: #333;
+}
+
+.channel-check {
+  color: #07c160;
+  font-size: 32rpx;
+} 

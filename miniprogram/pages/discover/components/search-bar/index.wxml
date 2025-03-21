@@ -1,0 +1,17 @@
+<view class="search-bar {{focused ? 'focused' : ''}}">
+  <view class="search-input-wrap">
+    <image class="search-icon" src="/images/search.png" mode="aspectFit"></image>
+    <input
+      class="search-input"
+      type="text"
+      placeholder="{{placeholder}}"
+      value="{{value}}"
+      bindinput="onInput"
+      bindfocus="onFocus"
+      bindblur="onBlur"
+    />
+    <view class="clear-btn {{value ? 'show' : ''}}" bindtap="onClear">
+      <image class="clear-icon" src="/images/close.png" mode="aspectFit"></image>
+    </view>
+  </view>
+</view> 
