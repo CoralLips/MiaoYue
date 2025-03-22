@@ -1,4 +1,4 @@
-/* pages/video-player/index.wxss */
+/* packages/media/video-player/index.wxss */
 .video-container {
   position: relative;
   width: 100%;

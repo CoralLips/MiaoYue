@@ -1,4 +1,4 @@
-/* pages/user/detail/index.wxss */
+/* packages/user/detail/index.wxss */
 .page {
   width: 100vw;
   min-height: 100vh;

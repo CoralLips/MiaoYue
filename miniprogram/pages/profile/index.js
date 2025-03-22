@@ -149,72 +149,107 @@ Page({
     }
   },
 
+  // 上传新头像
+  async uploadAvatar() {
+    try {
+      console.log('开始上传头像...');
+      const res = await wx.chooseMedia({
+        count: 1,
+        mediaType: ['image']
+      });
+      
+      console.log('选择的图片:', res);
+      const tempFilePath = res.tempFiles[0].tempFilePath;
+      
+      wx.showLoading({
+        title: '上传中...',
+      });
+      
+      // 上传到云存储
+      const openid = getApp().globalData.openid;
+      if (!openid) {
+        console.error('上传头像错误: 用户未登录');
+        wx.hideLoading();
+        return;
+      }
+      
+      console.log('上传头像到云存储, openid:', openid);
+      const cloudPath = `avatars/${openid}_${Date.now()}.${tempFilePath.split('.').pop()}`;
+      
+      const uploadRes = await wx.cloud.uploadFile({
+        cloudPath,
+        filePath: tempFilePath
+      });
+      
+      console.log('头像上传结果:', uploadRes);
+      
+      if (uploadRes.fileID) {
+        // 更新用户头像
+        await this.updateUserField('avatarUrl', uploadRes.fileID);
+        console.log('用户头像已更新, fileID:', uploadRes.fileID);
+      }
+      
+      wx.hideLoading();
+      
+      wx.showToast({
+        title: '上传成功',
+        icon: 'success'
+      });
+    } catch (error) {
+      console.error('上传头像失败:', error);
+      wx.hideLoading();
+      wx.showToast({
+        title: '上传失败',
+        icon: 'none'
+      });
+    }
+  },
+  
   // 创建新用户
   async createNewUser(openid) {
-    const db = wx.cloud.database();
-    const defaultNickName = '用户' + openid.substring(0, 4);
-    
-    const res = await db.collection('users').add({
-      data: {
-        nickName: defaultNickName,
-        avatarUrl: '/images/avatar.png',
-        introduction: '这个用户很懒，还没有填写介绍~',
-        mediaList: [],
-        wechat: '',
-        phone: '',
-        createTime: db.serverDate()
+    try {
+      console.log('开始创建新用户...');
+      const app = getApp();
+      const openid = app.globalData.openid;
+      
+      if (!openid) {
+        console.error('创建用户失败: 未获取到openid');
+        return false;
       }
-    });
-    console.log('用户创建成功', res);
-    this.setData({
-      userInfo: {
-        avatarUrl: '/images/avatar.png',
-        nickName: defaultNickName,
-        _openid: openid,
-        introduction: '这个用户很懒，还没有填写介绍~',
-        mediaList: [],
-        wechat: '',
-        phone: ''
-      },
-      isLoggedIn: true,
-      isLoading: false
-    });
-  },
-
-  // 编辑头像
-  editAvatar() {
-    wx.chooseImage({
-      count: 1,
-      sizeType: ['compressed'],
-      sourceType: ['album'],
-      success: (res) => {
-        const tempFilePath = res.tempFilePaths[0];
-        
-        // 显示加载中
-        wx.showLoading({
-          title: '上传中...'
+      
+      // 默认头像路径
+      const defaultAvatarPath = '/images/avatar.png';
+      
+      // 创建用户记录
+      const db = wx.cloud.database();
+      const result = await db.collection('users').add({
+        data: {
+          _openid: openid,
+          nickName: '新用户',
+          avatarUrl: defaultAvatarPath,
+          introduction: '这个用户很懒，还没有填写介绍~',
+          location: [116.397470, 39.908823],  // 北京默认位置
+          createTime: db.serverDate()
+        }
+      });
+      
+      console.log('创建用户结果:', result);
+      
+      if (result._id) {
+        // 获取并设置新创建的用户信息
+        const userInfo = await db.collection('users').doc(result._id).get();
+        this.setData({
+          userInfo: userInfo.data
         });
         
-        // 上传图片到云存储
-        const cloudPath = `avatars/${this.data.userInfo._openid}_${new Date().getTime()}.jpg`;
-        wx.cloud.uploadFile({
-          cloudPath,
-          filePath: tempFilePath,
-          success: (res) => {
-            // 更新用户头像
-            this.updateUserField('avatarUrl', res.fileID);
-          },
-          fail: (err) => {
-            console.error('上传头像失败', err);
-            wx.hideLoading();
-            wx.showToast({
-              title: '上传头像失败',
-              icon: 'none'
-            });
-          }
-        });
+        return true;
       }
-    });
+      
+      return false;
+    } catch (error) {
+      console.error('创建新用户失败:', error);
+      return false;
+    }
   },
 
   // 编辑昵称
@@ -465,7 +500,7 @@ Page({
     } else if (media.type === 'video') {
       // 播放视频
       wx.navigateTo({
-        url: `/pages/video-player/index?fileID=${encodeURIComponent(media.fileID)}`
+        url: `/packages/media/video-player/index?fileID=${encodeURIComponent(media.fileID)}`
       });
     }
   },

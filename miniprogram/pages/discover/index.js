@@ -2,7 +2,9 @@
 const LocationService = require('./services/location');
 const MarkerService = require('./services/marker');
 const UserService = require('./services/user');
+const AvatarService = require('./services/avatar');
 const { TAB_BAR_ITEMS } = require('../../utils/constants');
+const db = wx.cloud.database(); // 添加数据库引用
 
 Page({
   data: {
@@ -17,6 +19,7 @@ Page({
     showUserPopup: false,
     currentUser: null,
     needUserInfo: false,
+    canvasSize: 200, // 用于绘制圆形头像的Canvas大小
     debounceTimer: null,
     regionCache: {
       data: null,
@@ -25,6 +28,7 @@ Page({
     }
   },
 
+  // ===== 生命周期函数 =====
   onLoad() {
     this.initLocation();
     this.loadMarkers();
@@ -34,6 +38,9 @@ Page({
   onShow() {
     this.updateMyLocation();
     this.updateTabBarSelection();
+    
+    // 每次页面显示时重新加载标记，确保使用圆形头像
+    this.loadMarkers();
   },
 
   updateTabBarSelection() {
@@ -44,36 +51,87 @@ Page({
     }
   },
 
-  async initLocation() {
-    const location = await LocationService.getCurrentLocation();
-    this.setData({
-      latitude: location.latitude,
-      longitude: location.longitude
-    });
+  onReady() {
+    // 获取地图上下文
+    this.mapCtx = wx.createMapContext('map');
   },
 
-  async loadMarkers() {
+  onUnload() {
+    // 清理计时器
+    if (this.data.debounceTimer) {
+      clearTimeout(this.data.debounceTimer);
+    }
+  },
+
+  // ===== 位置与地图相关 =====
+  async initLocation() {
     try {
-      // 获取当前地图视图区域
-      const mapCtx = wx.createMapContext('map');
-      mapCtx.getRegion({
-        success: async (res) => {
-          await this.loadUsersInRegion(res.southwest, res.northeast);
-        },
-        fail: (err) => {
-          console.error('获取地图区域失败', err);
-          wx.showToast({
-            title: '加载数据失败',
-            icon: 'none'
-          });
-        }
+      const location = await LocationService.getCurrentLocation();
+      this.setData({
+        latitude: location.latitude,
+        longitude: location.longitude
       });
     } catch (error) {
-      console.error('加载标记失败', error);
+      console.error('获取位置失败', error);
+      // 使用默认位置
       wx.showToast({
-        title: '加载数据失败',
+        title: '获取位置失败，使用默认位置',
         icon: 'none'
       });
+    }
+  },
+
+  moveToCurrentLocation() {
+    LocationService.getCurrentLocation()
+      .then(res => {
+        this.setData({
+          latitude: res.latitude,
+          longitude: res.longitude
+        });
+      })
+      .catch(err => {
+        console.error('获取位置失败', err);
+        wx.showToast({
+          title: '获取位置失败',
+          icon: 'none'
+        });
+      });
+  },
+
+  async updateMyLocation() {
+    await UserService.updateMyLocation();
+  },
+
+  // ===== 标记点加载与更新 =====
+  async loadMarkers() {
+    try {
+      // 使用showToast替代showLoading，不显示图标
+      wx.showToast({
+        title: '加载中...',
+        icon: 'none',
+        duration: 60000 // 足够长的时间
+      });
+      
+      console.log('开始加载地图标记点...');
+      // 获取用户数据
+      const usersRes = await db.collection('users').limit(100).get();
+      const users = usersRes.data;
+      console.log('获取到的用户数据:', users.length);
+      
+      // 处理每个用户的头像为圆形，使用专门的头像处理服务
+      const processedUsers = await AvatarService.processUsersAvatars(users);
+      
+      // 创建标记点
+      const markers = MarkerService.processMarkers(processedUsers);
+      console.log('生成的地图标记点:', markers.length);
+      
+      // 更新标记点
+      this.updateMarkers(markers);
+      
+      wx.hideToast();
+    } catch (error) {
+      console.error('加载标记点失败', error);
+      wx.hideToast();
     }
   },
 
@@ -85,47 +143,6 @@ Page({
     );
     
     this.setData({ markers, filteredMarkers });
-  },
-
-  // 合并搜索输入和搜索确认功能
-  onSearchInput(e) {
-    const { value } = e.detail;
-    this.setData({ searchKeyword: value });
-    this.updateFilteredMarkers();
-  },
-
-  // 搜索按钮确认
-  onSearch() {
-    this.updateFilteredMarkers();
-  },
-
-  // 更新过滤后的标记
-  updateFilteredMarkers() {
-    const filteredMarkers = MarkerService.filterMarkers(
-      this.data.markers, 
-      this.data.currentFilter, 
-      this.data.searchKeyword
-    );
-    this.setData({ filteredMarkers });
-  },
-
-  onRegionChange(e) {
-    if (this.data.debounceTimer) {
-      clearTimeout(this.data.debounceTimer);
-    }
-
-    if (e.type === 'end') {
-      const debounceTimer = setTimeout(() => {
-        const mapCtx = wx.createMapContext('map');
-        mapCtx.getRegion({
-          success: (res) => {
-            this.loadUsersInRegion(res.southwest, res.northeast);
-          }
-        });
-      }, 300);
-
-      this.setData({ debounceTimer });
-    }
   },
 
   async loadUsersInRegion(southwest, northeast) {
@@ -149,8 +166,47 @@ Page({
       });
     }
     
-    const markers = MarkerService.processMarkers(result.data);
+    // 确保处理圆形头像
+    const processedUsers = await AvatarService.processUsersAvatars(result.data);
+    const markers = MarkerService.processMarkers(processedUsers);
     this.updateMarkers(markers);
+  },
+
+  async refreshLocations() {
+    // 使用showToast，不显示图标
+    wx.showToast({
+      title: '刷新中...',
+      icon: 'none',
+      duration: 60000 // 足够长的时间
+    });
+    
+    try {
+      await this.loadMarkers();
+    } catch (error) {
+      console.error('刷新位置失败', error);
+    } finally {
+      wx.hideToast();
+    }
+  },
+
+  // ===== 地图交互事件 =====
+  onRegionChange(e) {
+    if (this.data.debounceTimer) {
+      clearTimeout(this.data.debounceTimer);
+    }
+
+    if (e.type === 'end') {
+      const debounceTimer = setTimeout(() => {
+        const mapCtx = wx.createMapContext('map');
+        mapCtx.getRegion({
+          success: (res) => {
+            this.loadUsersInRegion(res.southwest, res.northeast);
+          }
+        });
+      }, 300);
+
+      this.setData({ debounceTimer });
+    }
   },
 
   onMarkerTap(e) {
@@ -161,10 +217,36 @@ Page({
     }
   },
 
-  moveToCurrentLocation() {
-    this.initLocation();
+  // ===== 搜索与筛选 =====
+  onSearchInput(e) {
+    const { value } = e.detail;
+    this.setData({ searchKeyword: value });
+    this.updateFilteredMarkers();
   },
 
+  onSearch() {
+    this.updateFilteredMarkers();
+  },
+
+  updateFilteredMarkers() {
+    const filteredMarkers = MarkerService.filterMarkers(
+      this.data.markers, 
+      this.data.currentFilter, 
+      this.data.searchKeyword
+    );
+    this.setData({ filteredMarkers });
+  },
+
+  onFilterChange(e) {
+    const { type } = e.detail;
+    this.setData({
+      currentFilter: type,
+      showChannelPopup: false
+    });
+    this.updateFilteredMarkers();
+  },
+
+  // ===== 弹窗管理 =====
   toggleChannelPopup() {
     this.setData({
       showChannelPopup: !this.data.showChannelPopup
@@ -175,15 +257,6 @@ Page({
     this.setData({
       showChannelPopup: false
     });
-  },
-
-  onFilterChange(e) {
-    const { type } = e.detail;
-    this.setData({
-      currentFilter: type,
-      showChannelPopup: false
-    });
-    this.updateFilteredMarkers();
   },
 
   showUserPopup(userData) {
@@ -200,11 +273,37 @@ Page({
     });
   },
 
+  // ===== 用户相关 =====
+  async checkUserInfo() {
+    const app = getApp();
+    if (app.globalData.userInfo) {
+      return;
+    }
+    
+    try {
+      const userRes = await db.collection('users').where({
+        _openid: app.globalData.openid
+      }).get();
+      
+      if (userRes.data.length === 0) {
+        // 如果用户不存在，则显示引导
+        this.setData({
+          needUserInfo: true
+        });
+      } else {
+        // 设置全局用户信息
+        app.globalData.userInfo = userRes.data[0];
+      }
+    } catch (error) {
+      console.error('检查用户信息失败', error);
+    }
+  },
+
   viewUserDetail() {
     const { currentUser } = this.data;
-    if (currentUser) {
+    if (currentUser && currentUser.openid) {
       wx.navigateTo({
-        url: `/pages/user/detail/index?id=${currentUser.id}`,
+        url: `/packages/user/detail/index?openid=${currentUser.openid}`,
         fail: (err) => {
           console.error('跳转用户详情页失败', err);
           wx.showToast({
@@ -220,30 +319,5 @@ Page({
         icon: 'none'
       });
     }
-  },
-
-  async refreshLocations() {
-    // 简单文本提示，无动画，短时间显示
-    wx.showToast({
-      title: '加载中...',
-      icon: 'none',
-      duration: 800,
-      mask: false
-    });
-    
-    try {
-      await this.loadMarkers();
-    } catch (error) {
-      console.error('刷新位置失败', error);
-    }
-  },
-
-  async checkUserInfo() {
-    const needUserInfo = await UserService.checkUserInfo();
-    this.setData({ needUserInfo });
-  },
-
-  async updateMyLocation() {
-    await UserService.updateMyLocation();
   }
 }); 

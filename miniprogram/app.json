@@ -8,13 +8,13 @@
     {
       "root": "packages/user",
       "pages": [
-        "pages/detail/index"
+        "detail/index"
       ]
     },
     {
       "root": "packages/media",
       "pages": [
-        "pages/video-player/index"
+        "video-player/index"
       ]
     }
   ],

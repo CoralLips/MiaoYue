@@ -14,10 +14,9 @@
       latitude="{{latitude}}"
       longitude="{{longitude}}"
       scale="{{mapScale}}"
-      markers="{{filteredMarkers}}"
+      markers="{{markers}}"
       bindregionchange="onRegionChange"
       bindmarkertap="onMarkerTap"
-      show-location
     ></map>
   </view>
 
@@ -43,4 +42,12 @@
     bind:close="closeUserPopup"
     bind:detail="viewUserDetail"
   />
+  
+  <!-- 用于离屏渲染的Canvas，实际不显示 -->
+  <canvas 
+    id="avatarCanvas" 
+    type="2d"
+    style="position: absolute; left: -9999px; width: {{canvasSize}}px; height: {{canvasSize}}px;"
+    canvas-id="avatarCanvas">
+  </canvas>
 </view> 

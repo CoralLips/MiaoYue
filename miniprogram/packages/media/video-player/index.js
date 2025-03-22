@@ -1,4 +1,4 @@
-// pages/video-player/index.js
+// packages/media/video-player/index.js
 Page({
   data: {
     videoUrl: '',

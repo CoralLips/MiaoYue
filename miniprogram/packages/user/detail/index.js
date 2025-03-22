@@ -90,7 +90,7 @@ Page({
     } else if (media.type === 'video') {
       // 播放视频
       wx.navigateTo({
-        url: `/packages/media/pages/video-player/index?fileID=${encodeURIComponent(media.fileID)}`
+        url: `/packages/media/video-player/index?fileID=${encodeURIComponent(media.fileID)}`
       });
     }
   }
