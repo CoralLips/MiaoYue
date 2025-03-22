@@ -3,7 +3,7 @@
     <image class="control-icon" src="/images/filter.png" />
   </view>
   <view class="control-btn" bindtap="onRefreshTap">
-    <image class="control-icon" src="/images/refresh.png" />
+    <image class="control-icon {{isRefreshing ? 'icon-rotate' : ''}}" src="/images/refresh.png" />
   </view>
   <view class="control-btn" bindtap="onLocationTap">
     <image class="control-icon" src="/images/location.png" />

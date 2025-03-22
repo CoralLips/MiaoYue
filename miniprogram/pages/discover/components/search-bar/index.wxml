@@ -1,6 +1,8 @@
 <view class="search-bar {{focused ? 'focused' : ''}}">
   <view class="search-input-wrap">
-    <image class="search-icon" src="/images/search.png" mode="aspectFit"></image>
+    <view class="search-icon">
+      <image class="search-icon-image" src="/images/search.png" mode="aspectFit"></image>
+    </view>
     <input
       class="search-input"
       type="text"
