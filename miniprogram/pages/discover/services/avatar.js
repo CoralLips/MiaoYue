@@ -167,55 +167,80 @@ const calculateCropParams = (imgInfo) => {
  * @returns {Promise<string>} 临时文件的Base64数据
  */
 const drawCircleAvatarOffscreen = async (imgPath, size, useHighQuality = false) => {
-  // 获取图片信息
-  const imgInfo = await wx.getImageInfo({ src: imgPath });
-  const { srcX, srcY, minDimension } = calculateCropParams(imgInfo);
-
   // 画布尺寸，使用2倍尺寸可提高清晰度，降低锯齿
   const canvasSize = useHighQuality ? size * 2 : size;
+  let offscreenCanvas = null;
+  let image = null;
   
-  // 创建离屏Canvas
-  const offscreenCanvas = wx.createOffscreenCanvas({ 
-    type: '2d', 
-    width: canvasSize, 
-    height: canvasSize 
-  });
-  const ctx = offscreenCanvas.getContext('2d');
-  
-  // 清空画布并设置平滑选项
-  ctx.clearRect(0, 0, canvasSize, canvasSize);
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = useHighQuality ? 'high' : 'medium';
-  
-  // 创建圆形剪裁区域 - 使用路径优化
-  ctx.beginPath();
-  ctx.arc(canvasSize/2, canvasSize/2, canvasSize/2, 0, 2 * Math.PI);
-  ctx.clip();
-  
-  // 预加载图像到内存
-  const image = offscreenCanvas.createImage();
-  await new Promise((resolve, reject) => {
-    image.onload = resolve;
-    image.onerror = reject;
-    image.src = imgPath;
-  });
-  
-  // 绘制图像，确保从中心裁剪并填充整个圆形区域
-  ctx.drawImage(
-    image, 
-    srcX, srcY, minDimension, minDimension, // 源图像裁剪参数
-    0, 0, canvasSize, canvasSize // 目标区域参数
-  );
-  
-  // 绘制白色边框
-  ctx.beginPath();
-  ctx.arc(canvasSize/2, canvasSize/2, canvasSize/2 - (useHighQuality ? 2 : 1), 0, 2 * Math.PI);
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = useHighQuality ? 3 : 2;
-  ctx.stroke();
-  
-  // 将离屏Canvas内容导出为图片，调整压缩品质
-  return offscreenCanvas.toDataURL('image/png', useHighQuality ? 0.95 : 0.85);
+  try {
+    // 获取图片信息
+    const imgInfo = await wx.getImageInfo({ src: imgPath });
+    const { srcX, srcY, minDimension } = calculateCropParams(imgInfo);
+
+    // 创建离屏Canvas
+    offscreenCanvas = wx.createOffscreenCanvas({ 
+      type: '2d', 
+      width: canvasSize, 
+      height: canvasSize 
+    });
+    const ctx = offscreenCanvas.getContext('2d');
+    
+    // 清空画布并设置平滑选项
+    ctx.clearRect(0, 0, canvasSize, canvasSize);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = useHighQuality ? 'high' : 'medium';
+    
+    // 创建圆形剪裁区域 - 使用路径优化
+    ctx.beginPath();
+    ctx.arc(canvasSize/2, canvasSize/2, canvasSize/2, 0, 2 * Math.PI);
+    ctx.clip();
+    
+    // 预加载图像到内存
+    image = offscreenCanvas.createImage();
+    await new Promise((resolve, reject) => {
+      image.onload = resolve;
+      image.onerror = reject;
+      image.src = imgPath;
+    });
+    
+    // 绘制图像，确保从中心裁剪并填充整个圆形区域
+    ctx.drawImage(
+      image, 
+      srcX, srcY, minDimension, minDimension, // 源图像裁剪参数
+      0, 0, canvasSize, canvasSize // 目标区域参数
+    );
+    
+    // 绘制白色边框
+    ctx.beginPath();
+    ctx.arc(canvasSize/2, canvasSize/2, canvasSize/2 - (useHighQuality ? 2 : 1), 0, 2 * Math.PI);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = useHighQuality ? 3 : 2;
+    ctx.stroke();
+    
+    // 将离屏Canvas内容导出为图片，调整压缩品质
+    const result = offscreenCanvas.toDataURL('image/png', useHighQuality ? 0.95 : 0.85);
+    
+    return result;
+  } catch (error) {
+    log('error', '离屏Canvas绘制失败:', error);
+    throw error;
+  } finally {
+    // 释放资源
+    if (image) {
+      image.src = '';
+      image = null;
+    }
+    
+    // 在支持的环境中释放Canvas对象
+    if (offscreenCanvas && offscreenCanvas.dispose) {
+      try {
+        offscreenCanvas.dispose();
+      } catch (e) {
+        // 忽略释放错误
+      }
+    }
+    offscreenCanvas = null;
+  }
 };
 
 /**
@@ -335,62 +360,68 @@ const createCircleAvatar = async (imageUrl, size = 60, userId = '', options = {}
 
 /**
  * 传统方式创建圆形头像（作为备用方法）
+ * @param {string} imgPath - 图片路径
+ * @param {number} size - 头像尺寸
+ * @param {string} userId - 用户ID
+ * @returns {Promise<string>} 圆形头像的本地临时路径
  */
 const fallbackCreateCircleAvatar = (imgPath, size, userId) => {
   return new Promise((resolve, reject) => {
     try {
-      // 创建唯一Canvas ID
-      const canvasId = `avatarCanvas_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // 使用页面中固定的Canvas ID，而不是动态生成ID
+      const canvasId = 'avatarCanvas';
       
-      // 创建临时Canvas组件
-      const query = wx.createSelectorQuery();
-      const canvas = query.select('#' + canvasId);
+      log('info', `使用备用方法处理头像:`, { imgPath, userId });
       
-      if (!canvas) {
-        log('error', '未找到Canvas组件', canvasId);
-        resolve('/images/avatar.png');
-        return;
-      }
-      
-      const ctx = wx.createCanvasContext(canvasId);
-      
-      // 清空画布
-      ctx.clearRect(0, 0, size, size);
-      
-      // 绘制圆形
-      ctx.save();
-      ctx.beginPath();
-      // 创建圆形剪裁区域
-      ctx.arc(size/2, size/2, size/2, 0, 2 * Math.PI);
-      ctx.clip();
-      
-      // 绘制图像
-      ctx.drawImage(imgPath, 0, 0, size, size);
-      ctx.restore();
-      
-      // 绘制白色边框
-      ctx.beginPath();
-      ctx.arc(size/2, size/2, size/2, 0, 2 * Math.PI);
-      ctx.setStrokeStyle('#ffffff');
-      ctx.setLineWidth(2);
-      ctx.stroke();
-      
-      // 导出为图片
-      ctx.draw(false, () => {
-        // 延迟确保绘制完成
-        setTimeout(() => {
-          wx.canvasToTempFilePath({
-            canvasId: canvasId,
-            success: (res) => {
-              resolve(res.tempFilePath);
-            },
-            fail: (err) => {
-              log('error', '创建圆形头像失败:', err);
-              resolve('/images/avatar.png');
-            }
-          });
-        }, 500);
-      });
+      // 延迟执行，确保Canvas已准备好
+      setTimeout(() => {
+        const ctx = wx.createCanvasContext(canvasId);
+        
+        if (!ctx) {
+          log('error', '无法获取Canvas上下文', canvasId);
+          resolve('/images/avatar.png');
+          return;
+        }
+        
+        // 清空画布
+        ctx.clearRect(0, 0, size, size);
+        
+        // 绘制圆形
+        ctx.save();
+        ctx.beginPath();
+        // 创建圆形剪裁区域
+        ctx.arc(size/2, size/2, size/2, 0, 2 * Math.PI);
+        ctx.clip();
+        
+        // 绘制图像
+        ctx.drawImage(imgPath, 0, 0, size, size);
+        ctx.restore();
+        
+        // 绘制白色边框
+        ctx.beginPath();
+        ctx.arc(size/2, size/2, size/2, 0, 2 * Math.PI);
+        ctx.setStrokeStyle('#ffffff');
+        ctx.setLineWidth(2);
+        ctx.stroke();
+        
+        // 导出为图片
+        ctx.draw(false, () => {
+          // 延迟确保绘制完成
+          setTimeout(() => {
+            wx.canvasToTempFilePath({
+              canvasId: canvasId,
+              success: (res) => {
+                log('info', '备用方法成功生成圆形头像', res.tempFilePath);
+                resolve(res.tempFilePath);
+              },
+              fail: (err) => {
+                log('error', '创建圆形头像失败:', err);
+                resolve('/images/avatar.png');
+              }
+            });
+          }, 500);
+        });
+      }, 100);
     } catch (error) {
       log('error', 'fallback方法创建圆形头像失败:', error);
       resolve('/images/avatar.png');
@@ -599,6 +630,11 @@ const processUserAvatar = async (user, index) => {
  * @returns {Promise<Array>} - 处理后的用户数据数组
  */
 const processUsersAvatars = async (users, options = {}) => {
+  if (!users || !Array.isArray(users)) {
+    log('warn', '无效的用户数据数组', { users });
+    return [];
+  }
+  
   try {
     const { 
       batchSize = 3,     // 每批处理3个用户，避免同时处理太多造成卡顿
@@ -607,9 +643,10 @@ const processUsersAvatars = async (users, options = {}) => {
     
     log('info', '开始处理用户头像，总数:', users.length);
     
-    // 创建用户索引数组
-    const userIndices = Array.from({ length: users.length }, (_, i) => i);
-    const results = new Array(users.length);
+    // 创建深拷贝避免修改原始数据
+    const usersCopy = users.map(user => ({ ...user }));
+    const userIndices = Array.from({ length: usersCopy.length }, (_, i) => i);
+    const results = new Array(usersCopy.length);
     
     // 分批处理
     for (let i = 0; i < userIndices.length; i += batchSize) {
@@ -617,9 +654,11 @@ const processUsersAvatars = async (users, options = {}) => {
       
       // 并发处理当前批次
       const batchPromises = batchIndices.map(index => 
-        processUserAvatar(users[index], index)
+        processUserAvatar(usersCopy[index], index)
           .then(processedUser => {
             results[index] = processedUser;
+            // 及时释放对原对象的引用
+            usersCopy[index] = null;
           })
       );
       
@@ -629,6 +668,14 @@ const processUsersAvatars = async (users, options = {}) => {
       // 非最后一批，添加延迟，避免持续高负载
       if (i + batchSize < userIndices.length) {
         await new Promise(resolve => setTimeout(resolve, batchDelay));
+      }
+      
+      // 尝试释放内存 - 微信小程序没有手动GC机制
+      try {
+        // 通过触发一些无害的操作，帮助系统回收内存
+        Array(100).fill(0).map(() => "").join("");
+      } catch (e) {
+        // 忽略任何错误
       }
       
       log('info', `完成批次 ${Math.floor(i/batchSize) + 1}/${Math.ceil(userIndices.length/batchSize)}`);

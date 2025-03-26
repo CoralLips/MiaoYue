@@ -2,26 +2,30 @@
   <view class="header">
     <view class="back-btn" bindtap="goBack">
       <text class="back-icon">←</text>
-      <text>返回</text>
     </view>
-    <view class="title">视频播放</view>
   </view>
   
-  <view class="video-wrapper" wx:if="{{!loading}}">
+  <view class="video-wrapper">
     <video 
+      id="myVideo"
       src="{{videoUrl}}" 
-      controls 
-      autoplay 
-      binderror="videoError"
-      show-center-play-btn="{{true}}"
+      controls
+      autoplay
+      show-center-play-btn="{{false}}"
       show-play-btn="{{true}}"
-      show-fullscreen-btn="{{true}}"
+      show-fullscreen-btn="{{false}}"
+      initial-time="{{0}}"
       object-fit="contain"
+      show-background-playback-button="{{false}}"
+      binderror="videoError"
       class="video-player"
     ></video>
   </view>
-  
-  <view class="loading" wx:if="{{loading}}">
-    <text>加载中...</text>
+
+  <view class="error-container" wx:if="{{error}}">
+    <view class="error-content">
+      <text class="error-text">{{errorMsg}}</text>
+      <view class="error-btn" bindtap="retryLoad">重试</view>
+    </view>
   </view>
 </view> 

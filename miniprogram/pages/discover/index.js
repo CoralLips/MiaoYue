@@ -211,10 +211,37 @@ Page({
 
   onMarkerTap(e) {
     const { markerId } = e.detail;
-    const marker = this.data.filteredMarkers.find(m => m.id === markerId);
+    console.log('点击标记点:', markerId, '类型:', typeof markerId);
+    
+    // 数值类型转换，确保比较一致性
+    const markerIdNumber = Number(markerId);
+    
+    // 在markers中查找对应的标记点
+    const marker = this.data.markers.find(m => m.id === markerIdNumber);
     if (marker) {
+      console.log('找到对应标记点:', marker.id);
       this.showUserPopup(marker.userData);
+      return;
     }
+    
+    // 尝试在filteredMarkers中查找
+    const filteredMarker = this.data.filteredMarkers.find(m => m.id === markerIdNumber);
+    if (filteredMarker) {
+      console.log('在filteredMarkers中找到标记点:', filteredMarker.id);
+      this.showUserPopup(filteredMarker.userData);
+      return;
+    }
+    
+    // 最后一种方式：通过遍历所有markers的userData.markerId查找
+    for (const m of this.data.markers) {
+      if (m.userData && m.userData.markerId === markerIdNumber) {
+        console.log('通过userData.markerId找到标记点:', m.id);
+        this.showUserPopup(m.userData);
+        return;
+      }
+    }
+    
+    console.error('未找到对应标记点，ID:', markerId, '可用的标记点ID:', this.data.markers.map(m => m.id));
   },
 
   // ===== 搜索与筛选 =====
@@ -260,6 +287,18 @@ Page({
   },
 
   showUserPopup(userData) {
+    // 确保userData有效
+    if (!userData) {
+      console.error('无效的用户数据');
+      wx.showToast({
+        title: '获取用户信息失败',
+        icon: 'none'
+      });
+      return;
+    }
+    
+    console.log('显示用户信息:', userData);
+    
     this.setData({
       currentUser: userData,
       showUserPopup: true

@@ -1,5 +1,10 @@
 // 标记点处理模块
 const MarkerService = {
+  /**
+   * 处理用户数据生成地图标记点
+   * @param {Array} users - 用户数据数组 
+   * @returns {Array} 标记点数组
+   */
   processMarkers(users) {
     if (!users || !Array.isArray(users)) return [];
     
@@ -18,7 +23,8 @@ const MarkerService = {
       
       let lat, lng;
       
-      // 优先使用直接的latitude/longitude格式（微信小程序地图默认格式）
+      // 统一位置数据格式处理：支持多种位置格式
+      // 1. 微信小程序格式: { latitude, longitude }
       if (user.location.latitude !== undefined && user.location.longitude !== undefined) {
         if (typeof user.location.latitude === 'number' && typeof user.location.longitude === 'number') {
           lat = user.location.latitude;
@@ -28,7 +34,7 @@ const MarkerService = {
           return null;
         }
       }
-      // 兼容GeoJSON格式 { type: "Point", coordinates: [lng, lat] }
+      // 2. GeoJSON格式: { type: "Point", coordinates: [lng, lat] }
       else if (user.location.coordinates && Array.isArray(user.location.coordinates) && 
                user.location.coordinates.length === 2) {
         if (typeof user.location.coordinates[0] === 'number' && 
@@ -40,7 +46,7 @@ const MarkerService = {
           return null;
         }
       }
-      // 支持数组格式 [lng, lat]
+      // 3. 数组格式: [lng, lat]
       else if (Array.isArray(user.location) && user.location.length === 2) {
         if (typeof user.location[0] === 'number' && typeof user.location[1] === 'number') {
           lng = user.location[0];
@@ -56,13 +62,25 @@ const MarkerService = {
         return null;
       }
       
-      // 优先使用本地处理的圆形头像，这个路径已经是圆形图片
+      // 使用本地处理的圆形头像路径
       const iconPath = user.circleAvatarPath || user.avatarUrl || '/images/avatar.png';
-      console.log(`标记点 ${index} 使用头像:`, iconPath);
+      
+      // 创建标准化的位置数据对象
+      const standardLocation = {
+        latitude: lat,
+        longitude: lng
+      };
+      
+      // 获取用户唯一标识，确保在数据库中可查询
+      const userId = user._openid || user._id || `user_${index}`;
+      
+      // ===关键修改===：使用索引作为id，确保是纯数字ID
+      // 微信地图组件要求marker的id必须是数字类型
+      const markerId = index;
       
       // 创建地图标记点
       return {
-        id: index,
+        id: markerId, // 使用纯数字ID
         latitude: lat,
         longitude: lng,
         width: 40, // 标记点大小
@@ -84,19 +102,22 @@ const MarkerService = {
         // 只保留基本用户信息
         userData: {
           id: user._id,
-          openid: user._openid,
+          openid: user._openid || userId, // 确保存在openid
           nickName: user.nickName || '未知用户',
           avatarUrl: user.avatarUrl || '/images/avatar.png',
           gender: user.gender || 0,
-          location: user.location,
+          // 统一使用标准格式的位置数据
+          location: standardLocation,
           introduction: user.introduction || '这个用户很懒，什么都没留下',
           tags: user.tags || [],
-          visible: user.visible !== false
+          visible: user.visible !== false,
+          // 存储数字id，便于映射回查询
+          markerId: markerId
         }
       };
     }).filter(marker => marker !== null); // 过滤掉无效的标记点
     
-    console.log(`生成了 ${markers.length} 个标记点`);
+    console.log(`生成了 ${markers.length} 个标记点，第一个标记点ID:`, markers.length > 0 ? markers[0].id : '无');
     return markers;
   },
 
@@ -128,55 +149,6 @@ const MarkerService = {
     }
     
     return filtered;
-  },
-
-  /**
-   * 将用户数据转换为地图标记点
-   * @param {Array} users - 用户数据数组
-   * @returns {Array} - 标记点数组
-   */
-  createMarkers(users = []) {
-    console.log('创建标记点, 用户数据:', users);
-    if (!users.length) return [];
-
-    return users.map((user, index) => {
-      // 检查是否有位置信息
-      if (!user.location || !Array.isArray(user.location) || user.location.length !== 2) {
-        console.log(`用户 ${user._openid || index} 缺少位置信息:`, user.location);
-        return null;
-      }
-
-      // 优先使用圆形头像，统一使用circleAvatarPath属性
-      const iconPath = user.circleAvatarPath || user.avatarUrl || '/images/avatar.png';
-      // 增强日志记录
-      console.log(`用户 ${user._openid || index} 最终使用的头像:`, {
-        用户ID: user._openid,
-        昵称: user.nickName,
-        原始头像: user.avatarUrl,
-        圆形头像: user.circleAvatarPath,
-        最终路径: iconPath,
-        是否是默认头像: iconPath === '/images/avatar.png'
-      });
-
-      return {
-        id: user._openid || index,
-        latitude: user.location[1],
-        longitude: user.location[0],
-        width: 36,  // 稍微增大一点
-        height: 36, // 稍微增大一点
-        callout: {
-          content: user.nickName || '用户',
-          padding: 5,
-          borderRadius: 5,
-          display: 'ALWAYS'
-        },
-        iconPath,
-        // 添加圆形样式
-        borderRadius: 18,  // 宽高的一半
-        borderWidth: 2,
-        borderColor: '#ffffff'
-      };
-    }).filter(marker => marker !== null);
   }
 };
 

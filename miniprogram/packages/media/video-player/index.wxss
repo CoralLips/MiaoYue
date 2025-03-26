@@ -4,40 +4,47 @@
   width: 100%;
   height: 100vh;
   background: #000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.video {
-  width: 100%;
-  height: 100%;
-}
-
-.controls {
+.header {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
-  padding: var(--spacing-base);
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  height: 44px;
+  z-index: 100;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
 }
 
 .back-btn {
-  position: absolute;
-  top: var(--spacing-lg);
-  left: var(--spacing-base);
-  color: var(--color-bg-card);
-  font-size: var(--font-size-lg);
-  z-index: 100;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  color: #fff;
+  font-size: 24px;
 }
 
 .title {
-  font-size: var(--font-size-base);
-  color: var(--color-bg-card);
-  margin-bottom: var(--spacing-sm);
+  color: #fff;
+  font-size: 16px;
+  margin-left: 15px;
 }
 
 /* 视频播放器样式 */
 .video-wrapper {
-  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -48,12 +55,80 @@
   height: 100%;
 }
 
+.video-player.hidden {
+  opacity: 0;
+}
+
 /* 加载中样式 */
-.loading {
-  flex: 1;
+.loading-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--color-bg-card);
-  font-size: var(--font-size-base);
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loading-icon {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  color: #fff;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+/* 错误提示样式 */
+.error-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.error-text {
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.error-btn {
+  padding: 8px 20px;
+  background: #ffffff;
+  color: #000000;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 } 

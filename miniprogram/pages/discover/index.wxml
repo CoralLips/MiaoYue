@@ -14,7 +14,7 @@
       latitude="{{latitude}}"
       longitude="{{longitude}}"
       scale="{{mapScale}}"
-      markers="{{markers}}"
+      markers="{{filteredMarkers}}"
       bindregionchange="onRegionChange"
       bindmarkertap="onMarkerTap"
     ></map>
