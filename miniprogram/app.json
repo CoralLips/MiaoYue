@@ -21,7 +21,7 @@
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#ffffff",
-    "navigationBarTitleText": "秒约",
+    "navigationBarTitleText": "地图名片",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f8f8f8",
     "enablePullDownRefresh": false
