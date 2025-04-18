@@ -1,8 +1,0 @@
-<view class="circle-image-container" style="width: {{size}}rpx; height: {{size}}rpx; border-width: {{borderWidth}}rpx; border-color: {{borderColor}};">
-  <image 
-    class="circle-image" 
-    src="{{error ? '/images/avatar.png' : src}}" 
-    mode="aspectFill" 
-    binderror="onError"
-  ></image>
-</view> 
